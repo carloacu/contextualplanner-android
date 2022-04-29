@@ -1,10 +1,8 @@
 package com.contextualplanner
 
 
-import com.contextualplanner.flattenBnfRegex
 import org.junit.Test
 import org.junit.Assert.assertEquals
-
 
 
 class BnfParserTest {
