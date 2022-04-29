@@ -1,3 +1,0 @@
-[submodule "contextualplanner"]
-	path = src/main/cpp/contextualplanner
-	url = https://github.com/carloacu/contextualplanner.git
