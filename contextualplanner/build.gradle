@@ -18,6 +18,8 @@ afterEvaluate {
     }
 }
 
+// Execute "./gradlew publishToMavenLocal" to publish to maven
+
 android {
     compileSdk 30
     ndkVersion "$ndk_version"
