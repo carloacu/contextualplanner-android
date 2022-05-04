@@ -3,7 +3,7 @@
 buildscript {
     ext {
         // Kotlin
-        kotlin_version = '1.4.10'
+        kotlin_version = '1.6.0'
 
         // NDK
         ndk_version = '21.3.6528147'
