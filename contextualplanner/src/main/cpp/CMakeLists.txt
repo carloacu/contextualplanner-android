@@ -37,7 +37,6 @@ if (ANDROID)
           "jni/contextualplanner-jni.cpp"
           "jni/domain-jni.cpp"
           "jni/problem-jni.cpp"
-          "jni/bnfparser-jni.cpp"
     )
 
     if (COUT_TO_ANDROID_LOG)
