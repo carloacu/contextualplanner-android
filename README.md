@@ -1,7 +1,8 @@
 Contextualplanner Android
 =========================
 
-Android wrapper of contextualplanner
+Android wrapper of contextualplanner<br/>
+Url of contextualplanner: https://github.com/carloacu/contextualplanner
 
 
 ### Step 1. Add the maven repository to your build file
