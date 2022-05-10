@@ -3,15 +3,11 @@ package com.contextualplanner
 
 data class Action(
     val id: String,
-    val triggers: List<String>,
-    val taskTrees: List<TaskTree>,
-    val recommendations: List<String>,
     val preferInContext: String,
     val precondition: String,
     val effect: String,
     val potentialEffect: String,
-    val goalsToAdd: Array<String>,
-    val replanifyDirectlyAfter: Boolean
+    val goalsToAdd: Array<String>
 )
 
 
