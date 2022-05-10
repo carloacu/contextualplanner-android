@@ -34,10 +34,8 @@ class Domain(
         actions.forEach { callback(it.value) }
     }
 
-    fun addRuntimeTask(runtimeTaskId: String) {
-        val newAction = Action(runtimeTaskId, listOf(), listOf(), listOf(),
-            "", "", runtimeTaskId, "", arrayOf(), false)
-        addAction(id, newAction)
+    fun addAction(action: Action) {
+        addAction(id, action)
     }
 
     fun removeRuntimeTask(runtimeTaskId: String) {
