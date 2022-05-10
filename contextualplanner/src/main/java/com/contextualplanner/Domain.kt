@@ -38,8 +38,8 @@ class Domain(
         addAction(id, action)
     }
 
-    fun removeRuntimeTask(runtimeTaskId: String) {
-        removeAction(id, runtimeTaskId)
+    fun removeAction(actionId: String) {
+        removeAction(id, actionId)
     }
 
     fun printActions(): String {
