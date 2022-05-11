@@ -8,66 +8,32 @@ class Problem : DisposableWithId(newProblem()) {
         init {
             ensureInitialized()
         }
+        private external fun newProblem(): Int
     }
 
-    override fun disposeImplementation(id: Int) {
-        deleteProblem(id)
-    }
+    external override fun disposeImplementation()
 
-    fun pushFrontGoal(goal: String, goalGroupId: String) {
-        pushFrontGoal(id, goal, goalGroupId)
-    }
+    external fun pushFrontGoal(goal: String, goalGroupId: String)
 
-    fun pushBackGoal(goal: String) {
-        pushBackGoal(id, goal)
-    }
+    external fun pushBackGoal(goal: String)
 
-    fun addFact(fact: String) {
-        addFact(id, fact)
-    }
+    external fun addFact(fact: String)
 
-    fun removeFact(fact: String) {
-        removeFact(id, fact)
-    }
+    external fun removeFact(fact: String)
 
-    fun modifyFacts(facts: String) {
-        modifyFacts(id, facts)
-    }
+    external fun modifyFacts(facts: String)
 
-    fun addGoals(goals: Array<String>) {
-        addGoals(id, goals)
-    }
+    external fun addGoals(goals: Array<String>)
 
-    fun removeFirstGoalsThatAreAlreadySatisfied() {
-        removeFirstGoalsThatAreAlreadySatisfied(id)
-    }
+    external fun removeFirstGoalsThatAreAlreadySatisfied()
 
-    fun addVariableToValue(variableName: String, variableValue: String) {
-        addVariableToValue(id, variableName, variableValue)
-    }
+    external fun addVariableToValue(variableName: String, variableValue: String)
 
-    fun printGoals(): String {
-        return printGoals(id)
-    }
+    external fun printGoals(): String
 
-    fun printFacts(): String {
-        return printFacts(id)
-    }
+    external fun printFacts(): String
 }
 
 
 
-private external fun newProblem(): Int
 
-private external fun deleteProblem(id: Int)
-
-private external fun pushFrontGoal(id: Int, goal: String, goalGroupId: String)
-private external fun pushBackGoal(id: Int, goal: String)
-private external fun addFact(id: Int, fact: String)
-private external fun removeFact(id: Int, fact: String)
-private external fun modifyFacts(id: Int, facts: String)
-private external fun addGoals(id: Int, goals: Array<String>)
-private external fun removeFirstGoalsThatAreAlreadySatisfied(id: Int)
-private external fun addVariableToValue(id: Int, variableName: String, variableValue: String)
-private external fun printGoals(id: Int): String
-private external fun printFacts(id: Int): String

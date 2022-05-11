@@ -30,8 +30,8 @@ const PlannerDomain* idToDomainUnsafe(jint id) {
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_com_contextualplanner_DomainKt_newDomain(
-        JNIEnv *env, jclass /*clazz*/, jobjectArray jactions) {
+Java_com_contextualplanner_Domain_00024Companion_newDomain(
+        JNIEnv *env, jobject /*object*/, jobjectArray jactions) {
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jint>(env, [&]() {
         return protectByMutexWithReturn<jint>([&]() {
 
@@ -56,11 +56,11 @@ Java_com_contextualplanner_DomainKt_newDomain(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_DomainKt_addAction(
-        JNIEnv *env, jclass /*clazz*/, jint domainId, jobject jaction) {
+Java_com_contextualplanner_Domain_addAction(
+        JNIEnv *env, jobject object, jobject jaction) {
     convertCppExceptionsToJavaExceptions(env, [&]() {
         protectByMutex([&]() {
-            auto it = _idToRobotPlannerDomain.find(domainId);
+            auto it = _idToRobotPlannerDomain.find(toId(env, object));
             if (it == _idToRobotPlannerDomain.end())
                 return;
             auto plannerAction = toPlannerAction(env, jaction);
@@ -73,14 +73,14 @@ Java_com_contextualplanner_DomainKt_addAction(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_DomainKt_removeAction(
-        JNIEnv *env, jclass /*clazz*/, jint domainId, jstring jactionStr) {
+Java_com_contextualplanner_Domain_removeAction(
+        JNIEnv *env, jobject object, jstring jactionStr) {
     convertCppExceptionsToJavaExceptions(env, [&]() {
         protectByMutex([&]() {
-            auto it = _idToRobotPlannerDomain.find(domainId);
+            auto it = _idToRobotPlannerDomain.find(toId(env, object));
             if (it == _idToRobotPlannerDomain.end())
                 return;
-            auto actionId = cvtoString(env, jactionStr);
+            auto actionId = toString(env, jactionStr);
             it->second.idToPlannerActions.erase(actionId);
             it->second.domain.removeAction(actionId);
         });
@@ -90,11 +90,11 @@ Java_com_contextualplanner_DomainKt_removeAction(
 
 extern "C"
 JNIEXPORT jstring JNICALL
-Java_com_contextualplanner_DomainKt_printActions(
-        JNIEnv *env, jclass /*clazz*/, jint domainId) {
+Java_com_contextualplanner_Domain_printActions(
+        JNIEnv *env, jobject object) {
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jstring>(env, [&]() {
         return protectByMutexWithReturn<jstring>([&]() {
-            auto it = _idToRobotPlannerDomain.find(domainId);
+            auto it = _idToRobotPlannerDomain.find(toId(env, object));
             if (it == _idToRobotPlannerDomain.end())
                 return env->NewStringUTF("");
             std::string res;
@@ -114,10 +114,10 @@ Java_com_contextualplanner_DomainKt_printActions(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_DomainKt_deleteDomain(
-        JNIEnv *env, jclass /*clazz*/, jint id) {
+Java_com_contextualplanner_Domain_disposeImplementation(
+        JNIEnv *env, jobject object) {
     protectByMutex([&]() {
-        _idToRobotPlannerDomain.erase(id);
+        _idToRobotPlannerDomain.erase(toId(env, object));
     });
 }
 

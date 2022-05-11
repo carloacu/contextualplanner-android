@@ -14,15 +14,6 @@
 
 namespace {
 
-    void
-    _convertCppExceptionsToJavaExceptions(JNIEnv *env, const std::function<void()> &pFunction) {
-        try {
-            pFunction();
-        } catch (const std::exception &e) {
-            env->ThrowNew(env->FindClass("java/lang/RuntimeException"), e.what());
-        }
-    }
-
     template<typename T>
     jint findMissingKey(const std::map<jint, T> &pIdToObj) {
         jint currentId = 0;
@@ -37,13 +28,9 @@ namespace {
 }
 
 
-template jobject protectByMutexWithReturn<jobject>(const std::function<jobject()> &pFunction);
-
 template jstring protectByMutexWithReturn<jstring>(const std::function<jstring()> &pFunction);
 
 template jint protectByMutexWithReturn<jint>(const std::function<jint()> &pFunction);
-
-template jintArray protectByMutexWithReturn<jintArray>(const std::function<jintArray()> &pFunction);
 
 
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
@@ -55,16 +42,31 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     return JNI_VERSION_1_6;
 }
 
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_contextualplanner_ContextualPlannerKt_replaceVariables(
+        JNIEnv *env, jclass /*clazz*/, jstring jStr, jobject problemObject) {
+    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jstring>(env, [&]() {
+        return protectByMutexWithReturn<jstring>([&]() {
+            auto *problemPtr = idToProblemUnsafe(toId(env, problemObject));
+            auto str = toString(env, jStr);
+            if (problemPtr != nullptr) {
+                replaceVariables(str, *problemPtr);
+            }
+            return env->NewStringUTF(str.c_str());
+        });
+    }, nullptr);
+}
 
 
 extern "C"
 JNIEXPORT jstring JNICALL
 Java_com_contextualplanner_ContextualPlannerKt_lookForAnActionToDo(
-        JNIEnv *env, jclass /*clazz*/, jint idProblem, jint idDomain) {
+        JNIEnv *env, jclass /*clazz*/, jobject problemObject, jobject domainObject) {
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jstring>(env, [&]() {
         return protectByMutexWithReturn<jstring>([&]() {
-            auto *domainPtr = idToDomainUnsafe(idDomain);
-            auto *problemPtr = idToProblemUnsafe(idProblem);
+            auto *domainPtr = idToDomainUnsafe(toId(env, domainObject));
+            auto *problemPtr = idToProblemUnsafe(toId(env, problemObject));
             if (domainPtr != nullptr && problemPtr != nullptr) {
                 std::map<std::string, std::string> parameters;
                 auto action = cp::lookForAnActionToDo(parameters, *problemPtr, domainPtr->domain,
@@ -73,7 +75,7 @@ Java_com_contextualplanner_ContextualPlannerKt_lookForAnActionToDo(
             }
             return env->NewStringUTF("");
         });
-    }, nullptr);
+    }, env->NewStringUTF(""));
 }
 
 
@@ -81,13 +83,13 @@ Java_com_contextualplanner_ContextualPlannerKt_lookForAnActionToDo(
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_contextualplanner_ContextualPlannerKt_notifyActionDone(
-        JNIEnv *env, jclass /*clazz*/, jstring jActionId, jint idProblem, jint idDomain) {
+        JNIEnv *env, jclass /*clazz*/, jstring jActionId, jobject problemObject, jobject domainObject) {
     convertCppExceptionsToJavaExceptions(env, [&]() {
         return protectByMutex([&]() {
-            auto *domainPtr = idToDomainUnsafe(idDomain);
-            auto *problemPtr = idToProblemUnsafe(idProblem);
+            auto *domainPtr = idToDomainUnsafe(toId(env, domainObject));
+            auto *problemPtr = idToProblemUnsafe(toId(env, problemObject));
             if (domainPtr != nullptr && problemPtr != nullptr) {
-                auto actionId = cvtoString(env, jActionId);
+                auto actionId = toString(env, jActionId);
                 auto itAction = domainPtr->idToPlannerActions.find(actionId);
                 if (itAction != domainPtr->idToPlannerActions.end())
                 {
@@ -99,44 +101,3 @@ Java_com_contextualplanner_ContextualPlannerKt_notifyActionDone(
     });
 }
 
-
-extern "C"
-JNIEXPORT jobjectArray JNICALL
-Java_com_contextualplanner_ContextualPlannerKt_parseCommand(
-        JNIEnv *env, jclass /*clazz*/, jstring jcommand) {
-    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jobjectArray>(env, [&]() {
-
-        std::string command = cvtoString(env, jcommand);
-        auto fact = cp::Fact::fromStr(command);
-
-        jobjectArray result;
-        result = (jobjectArray) env->NewObjectArray(fact.parameters.size() + 1,
-                                                    env->FindClass("java/lang/String"),
-                                                    env->NewStringUTF(""));
-
-        jsize arrayElt = 0;
-        env->SetObjectArrayElement(result, arrayElt++,
-                                   env->NewStringUTF(fact.name.c_str()));
-        for (const auto& currParam : fact.parameters)
-            env->SetObjectArrayElement(result, arrayElt++,
-                                       env->NewStringUTF(currParam.toStr().c_str()));
-        return result;
-    }, nullptr);
-}
-
-
-extern "C"
-JNIEXPORT jstring JNICALL
-Java_com_contextualplanner_ContextualPlannerKt_replaceVariables(
-        JNIEnv *env, jclass /*clazz*/, jstring jStr, jint idProblem) {
-    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jstring>(env, [&]() {
-        return protectByMutexWithReturn<jstring>([&]() {
-            auto *problemPtr = idToProblemUnsafe(idProblem);
-            auto str = cvtoString(env, jStr);
-            if (problemPtr != nullptr) {
-                replaceVariables(str, *problemPtr);
-            }
-            return env->NewStringUTF(str.c_str());
-        });
-    }, nullptr);
-}

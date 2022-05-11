@@ -1,59 +1,28 @@
 package com.contextualplanner
 
 
-data class Action(
-    val id: String,
-    val preferInContext: String,
-    val precondition: String,
-    val effect: String,
-    val potentialEffect: String,
-    val goalsToAdd: Array<String>
-)
-
-
 class Domain(
-    private val actions: Map<String, Action>,
-    val inform: List<String> = listOf()
-) : DisposableWithId(newDomain(actions.values.toTypedArray())) {
+    actions: Array<Action>
+) : DisposableWithId(newDomain(actions)) {
 
     companion object {
         init {
             ensureInitialized()
         }
+
+        private external fun newDomain(actions: Array<Action>): Int
     }
 
-    fun getAction(key: String): Action? {
-        return actions[key]
-    }
+    external fun addAction(action: Action)
 
-    fun forEachAction(callback: (action: Action) -> Unit) {
-        actions.forEach { callback(it.value) }
-    }
+    external fun removeAction(actionId: String)
 
-    fun addAction(action: Action) {
-        addAction(id, action)
-    }
+    external fun printActions(): String
 
-    fun removeAction(actionId: String) {
-        removeAction(id, actionId)
-    }
-
-    fun printActions(): String {
-        return printActions(id)
-    }
-
-    override fun disposeImplementation(id: Int) {
-        deleteDomain(id)
-    }
+    external override fun disposeImplementation()
 }
 
 
-private external fun newDomain(actions: Array<Action>): Int
 
-private external fun addAction(domainId: Int, action: Action)
 
-private external fun removeAction(domainId: Int, actionId: String)
 
-private external fun printActions(domainId: Int): String
-
-private external fun deleteDomain(domainId: Int)

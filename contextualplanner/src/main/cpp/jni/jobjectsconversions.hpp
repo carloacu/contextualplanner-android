@@ -44,11 +44,11 @@ private:
 };
 
 
-std::string cvtoString(JNIEnv *env, jstring inputString);
+std::string toString(JNIEnv *env, jstring inputString);
 
 std::vector<cp::Goal> toGoals(JNIEnv *env, jobjectArray jGoals);
 
-jint cvtoDisposableWithIdId(JNIEnv *env, jobject object);
+jint toId(JNIEnv *env, jobject object);
 
 PlannerAction toPlannerAction(JNIEnv *env, jobject action);
 

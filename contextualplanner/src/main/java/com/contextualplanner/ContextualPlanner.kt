@@ -10,7 +10,7 @@ import java.io.InputStream
  * It's internal because the calls are hidden in the constructor of the objects.
  */
 var isLoaded = false
-fun ensureInitialized() = synchronized(isLoaded) {
+internal fun ensureInitialized() = synchronized(isLoaded) {
     if (!isLoaded) {
         System.loadLibrary("contextualplanner-jni")
         isLoaded = true
@@ -28,53 +28,22 @@ abstract class DisposableWithId(
 
     fun dispose() {
         if (!isDisposed) {
-            disposeImplementation(id)
+            disposeImplementation()
             isDisposed = true
         }
     }
 
-    abstract fun disposeImplementation(id: Int)
+    abstract fun disposeImplementation()
 }
 
-fun readTextFile(inputStream: InputStream): String {
-    val outputStream = ByteArrayOutputStream()
-    val buf = ByteArray(1024)
-    var len: Int
-    try {
-        while (inputStream.read(buf).also { len = it } != -1) {
-            outputStream.write(buf, 0, len)
-        }
-        outputStream.close()
-        inputStream.close()
-    } catch (e: IOException) {
-    }
-    return outputStream.toString()
-}
+external fun replaceVariables(str: String, problem: Problem): String
 
-fun replaceVariables(str: String, problem: Problem): String {
-    return replaceVariables(str, problem.id)
-}
-
-fun lookForAnActionToDo(problem: Problem, domain: Domain): String {
-    return lookForAnActionToDo(problem.id, domain.id) ?: ""
-}
+external fun lookForAnActionToDo(problem: Problem, domain: Domain): String
 
 fun notifyActionDone(action: Action, problem: Problem, domain: Domain) {
-    notifyActionDone(action.id, problem.id, domain.id)
+    notifyActionDone(action.id, problem, domain)
 }
 
-
-fun notifyActionDone(actionId: String, problem: Problem, domain: Domain) {
-    notifyActionDone(actionId, problem.id, domain.id)
-}
+external fun notifyActionDone(idAction: String, problem: Problem, domain: Domain)
 
 
-external fun parseCommand(command: String): Array<String>
-
-
-
-private external fun replaceVariables(str: String, idProblem: Int): String
-
-private external fun lookForAnActionToDo(idProblem: Int, idDomain: Int): String?
-
-private external fun notifyActionDone(idAction: String, idProblem: Int, idDomain: Int)

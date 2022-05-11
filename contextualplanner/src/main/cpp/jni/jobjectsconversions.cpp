@@ -8,7 +8,7 @@ namespace {
     {
         jmethodID getFun = pEnv->GetMethodID(pClass, pFunctionName, "()Ljava/lang/String;");
         auto jStr = reinterpret_cast<jstring>(pEnv->CallObjectMethod(pOjbect, getFun));
-        return cvtoString(pEnv, jStr);
+        return toString(pEnv, jStr);
     }
 
     std::vector<cp::Goal> _getGoalArrayFromMethod(JNIEnv *pEnv, jclass pClass, jobject pOjbect, const char * pFunctionName)
@@ -20,7 +20,7 @@ namespace {
 }
 
 
-std::string cvtoString(JNIEnv *env, jstring inputString) {
+std::string toString(JNIEnv *env, jstring inputString) {
     if (env == nullptr)
         return "";
     const char *cstring;
@@ -37,13 +37,13 @@ std::vector<cp::Goal> toGoals(JNIEnv *env, jobjectArray jGoals) {
     for (int i = 0; i < size; ++i) {
         auto goalJStr = reinterpret_cast<jstring>(env->GetObjectArrayElement(
                 jGoals, i));
-        res.emplace_back(cvtoString(env, goalJStr));
+        res.emplace_back(toString(env, goalJStr));
         env->DeleteLocalRef(goalJStr);
     }
     return res;
 }
 
-jint cvtoDisposableWithIdId(JNIEnv *env, jobject object) {
+jint toId(JNIEnv *env, jobject object) {
     jclass semanticMemoryClass = env->FindClass("com/contextualplanner/DisposableWithId");
     jmethodID getIdFun = env->GetMethodID(semanticMemoryClass, "getId", "()I");
     return env->CallIntMethod(object, getIdFun);
