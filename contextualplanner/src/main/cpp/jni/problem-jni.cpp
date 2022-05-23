@@ -56,7 +56,7 @@ Java_com_contextualplanner_Problem_pushFrontGoal(
         if (problemPtr != nullptr)
         {
             auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-            problemPtr->pushFrontGoal(goal, priority, now);
+            problemPtr->pushFrontGoal(goal, now, priority);
         }
     });
 }
@@ -72,7 +72,7 @@ Java_com_contextualplanner_Problem_pushBackGoal(
         if (problemPtr != nullptr)
         {
             auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-            problemPtr->pushBackGoal(goal, priority, now);
+            problemPtr->pushBackGoal(goal, now, priority);
         }
     });
 }

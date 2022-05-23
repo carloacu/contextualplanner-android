@@ -95,7 +95,8 @@ Java_com_contextualplanner_ContextualPlannerKt_notifyActionDone(
                 if (itAction != domainPtr->idToPlannerActions.end())
                 {
                     std::map<std::string, std::string> parameters;
-                    problemPtr->notifyActionDone(actionId, parameters, itAction->second.effect, &itAction->second.goalsToAdd);
+                    auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
+                    problemPtr->notifyActionDone(actionId, parameters, itAction->second.effect, now, &itAction->second.goalsToAdd);
                 }
             }
         });
