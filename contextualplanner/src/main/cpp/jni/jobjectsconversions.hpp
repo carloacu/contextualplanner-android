@@ -18,7 +18,7 @@ struct PlannerAction
     cp::SetOfFacts precondition;
     cp::SetOfFacts effect;
     cp::SetOfFacts potentialEffect;
-    std::vector<cp::Goal> goalsToAdd;
+    std::map<int, std::vector<cp::Goal>> goalsToAdd;
 };
 
 
@@ -46,11 +46,13 @@ private:
 
 std::string toString(JNIEnv *env, jstring inputString);
 
-std::vector<cp::Goal> toGoals(JNIEnv *env, jobjectArray jGoals);
+std::map<int, std::vector<cp::Goal>> toGoals(JNIEnv *env, jobjectArray jGoals);
 
 jint toId(JNIEnv *env, jobject object);
 
 PlannerAction toPlannerAction(JNIEnv *env, jobject action);
+
+cp::Goal toGoal(JNIEnv *env, jobject goal, int* pPriority);
 
 
 #endif // CONTEXTUALPLANNER_JOBJECTSCONVERSIONS_HPP

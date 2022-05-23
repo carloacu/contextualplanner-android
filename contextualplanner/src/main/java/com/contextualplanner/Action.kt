@@ -6,5 +6,5 @@ data class Action(
     val precondition: String,
     val effect: String,
     val potentialEffect: String,
-    val goalsToAdd: Array<String>
+    val goalsToAdd: Array<Goal>
 )

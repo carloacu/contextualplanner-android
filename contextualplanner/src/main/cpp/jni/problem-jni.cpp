@@ -48,25 +48,32 @@ Java_com_contextualplanner_Problem_disposeImplementation(
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_contextualplanner_Problem_pushFrontGoal(
-        JNIEnv *env, jobject object, jstring jGoal, jstring jGoalGroupId) {
+        JNIEnv *env, jobject object, jobject jGoal) {
     protectByMutex([&]() {
-        auto goal = toString(env, jGoal);
-        auto goalGroupId = toString(env, jGoalGroupId);
+        int priority = 10;
+        auto goal = toGoal(env, jGoal, &priority);
         auto* problemPtr = idToProblemUnsafe(toId(env, object));
         if (problemPtr != nullptr)
-            problemPtr->pushFrontGoal(cp::Goal(goal, goalGroupId));
+        {
+            auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
+            problemPtr->pushFrontGoal(goal, priority, now);
+        }
     });
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_contextualplanner_Problem_pushBackGoal(
-        JNIEnv *env, jobject object, jstring jGoal) {
+        JNIEnv *env, jobject object, jobject jGoal) {
     protectByMutex([&]() {
-        auto goal = toString(env, jGoal);
+        int priority = 10;
+        auto goal = toGoal(env, jGoal, &priority);
         auto* problemPtr = idToProblemUnsafe(toId(env, object));
         if (problemPtr != nullptr)
-            problemPtr->pushBackGoal(goal);
+        {
+            auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
+            problemPtr->pushBackGoal(goal, priority, now);
+        }
     });
 }
 
@@ -116,7 +123,10 @@ Java_com_contextualplanner_Problem_addGoals(
     protectByMutex([&]() {
         auto* problemPtr = idToProblemUnsafe(toId(env, object));
         if (problemPtr != nullptr)
-            problemPtr->addGoals(toGoals(env, jGoals));
+        {
+            auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
+            problemPtr->addGoals(toGoals(env, jGoals), now);
+        }
     });
 }
 
@@ -152,22 +162,14 @@ Java_com_contextualplanner_Problem_addVariableToValue(
 extern "C"
 JNIEXPORT jstring JNICALL
 Java_com_contextualplanner_Problem_printGoals(
-        JNIEnv *env, jobject object) {
+        JNIEnv *env, jobject object, int goalNameMaxSize) {
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jstring>(env, [&]() {
         return protectByMutexWithReturn<jstring>([&]() {
             auto* problemPtr = idToProblemUnsafe(toId(env, object));
             if (problemPtr != nullptr)
             {
-                std::string res;
-                auto& goals = problemPtr->goals();
-                for (auto& goal : goals) {
-                    res += goal.toStr();
-                    auto& goalGroupId = goal.getGoalGroupId();
-                    if (!goalGroupId.empty())
-                        res += " groupId: " + goalGroupId;
-                    res += "\n";
-                }
-                return env->NewStringUTF(res.c_str());
+                auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
+                return env->NewStringUTF(problemPtr->printGoals(goalNameMaxSize, now).c_str());
             }
             return env->NewStringUTF("");
         });

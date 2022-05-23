@@ -13,9 +13,9 @@ class Problem : DisposableWithId(newProblem()) {
 
     external override fun disposeImplementation()
 
-    external fun pushFrontGoal(goal: String, goalGroupId: String)
+    external fun pushFrontGoal(goal: Goal)
 
-    external fun pushBackGoal(goal: String)
+    external fun pushBackGoal(goal: Goal)
 
     external fun addFact(fact: String)
 
@@ -23,13 +23,13 @@ class Problem : DisposableWithId(newProblem()) {
 
     external fun modifyFacts(facts: String)
 
-    external fun addGoals(goals: Array<String>)
+    external fun addGoals(goals: Array<Goal>)
 
     external fun removeFirstGoalsThatAreAlreadySatisfied()
 
     external fun addVariableToValue(variableName: String, variableValue: String)
 
-    external fun printGoals(): String
+    external fun printGoals(goalNameMaxSize: Int): String
 
     external fun printFacts(): String
 }

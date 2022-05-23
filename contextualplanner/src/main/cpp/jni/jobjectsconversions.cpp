@@ -11,9 +11,20 @@ namespace {
         return toString(pEnv, jStr);
     }
 
-    std::vector<cp::Goal> _getGoalArrayFromMethod(JNIEnv *pEnv, jclass pClass, jobject pOjbect, const char * pFunctionName)
+    int _getIntFromMethod(JNIEnv *pEnv, jclass pClass, jobject pOjbect, const char * pFunctionName)
     {
-        jmethodID getFun = pEnv->GetMethodID(pClass, pFunctionName, "()[Ljava/lang/String;");
+        jmethodID getFun = pEnv->GetMethodID(pClass, pFunctionName, "()I");
+        return pEnv->CallIntMethod(pOjbect, getFun);
+    }
+    bool _getBooleanFromMethod(JNIEnv *pEnv, jclass pClass, jobject pOjbect, const char * pFunctionName)
+    {
+        jmethodID getFun = pEnv->GetMethodID(pClass, pFunctionName, "()Z");
+        return pEnv->CallBooleanMethod(pOjbect, getFun);
+    }
+
+    std::map<int, std::vector<cp::Goal>> _getGoalArrayFromMethod(JNIEnv *pEnv, jclass pClass, jobject pOjbect, const char * pFunctionName)
+    {
+        jmethodID getFun = pEnv->GetMethodID(pClass, pFunctionName, "()[Lcom/contextualplanner/Goal;");
         auto jGoals = reinterpret_cast<jobjectArray>(pEnv->CallObjectMethod(pOjbect, getFun));
         return toGoals(pEnv, jGoals);
     }
@@ -31,14 +42,14 @@ std::string toString(JNIEnv *env, jstring inputString) {
     return string;
 }
 
-std::vector<cp::Goal> toGoals(JNIEnv *env, jobjectArray jGoals) {
-    std::vector<cp::Goal> res;
+std::map<int, std::vector<cp::Goal>> toGoals(JNIEnv *env, jobjectArray jGoals) {
+    std::map<int, std::vector<cp::Goal>> res;
     int size = env->GetArrayLength(jGoals);
     for (int i = 0; i < size; ++i) {
-        auto goalJStr = reinterpret_cast<jstring>(env->GetObjectArrayElement(
-                jGoals, i));
-        res.emplace_back(toString(env, goalJStr));
-        env->DeleteLocalRef(goalJStr);
+        shared_jobject goalJObj(env, env->GetObjectArrayElement(jGoals, i));
+        int priority = 0;
+        auto goal = toGoal(env, goalJObj.get(), &priority);
+        res[priority].push_back(goal);
     }
     return res;
 }
@@ -61,5 +72,19 @@ PlannerAction toPlannerAction(JNIEnv *env, jobject action)
     res.effect = cp::SetOfFacts::fromStr(_getStringFromMethod(env, actionClass, action, "getEffect"), sep);
     res.potentialEffect = cp::SetOfFacts::fromStr(_getStringFromMethod(env, actionClass, action, "getPotentialEffect"), sep);
     res.goalsToAdd = _getGoalArrayFromMethod(env, actionClass, action, "getGoalsToAdd");
+    return res;
+}
+
+
+cp::Goal toGoal(JNIEnv *env, jobject goal, int* pPriority)
+{
+    jclass goalClass = env->FindClass("com/contextualplanner/Goal");
+    auto name = _getStringFromMethod(env, goalClass, goal, "getName");
+    bool stackable = _getBooleanFromMethod(env, goalClass, goal, "getStackable");
+    bool maxTimeToKeepInactive = _getIntFromMethod(env, goalClass, goal, "getMaxTimeToKeepInactive");
+    auto groupId = _getStringFromMethod(env, goalClass, goal, "getGroupId");
+    cp::Goal res(name, stackable, maxTimeToKeepInactive, groupId);
+    if (pPriority != nullptr)
+        *pPriority = _getIntFromMethod(env, goalClass, goal, "getPriority");
     return res;
 }
