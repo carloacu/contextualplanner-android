@@ -81,7 +81,7 @@ cp::Goal toGoal(JNIEnv *env, jobject goal, int* pPriority)
     jclass goalClass = env->FindClass("com/contextualplanner/Goal");
     auto name = _getStringFromMethod(env, goalClass, goal, "getName");
     bool stackable = _getBooleanFromMethod(env, goalClass, goal, "getStackable");
-    bool maxTimeToKeepInactive = _getIntFromMethod(env, goalClass, goal, "getMaxTimeToKeepInactive");
+    int maxTimeToKeepInactive = _getIntFromMethod(env, goalClass, goal, "getMaxTimeToKeepInactive");
     auto groupId = _getStringFromMethod(env, goalClass, goal, "getGroupId");
     cp::Goal res(name, stackable, maxTimeToKeepInactive, groupId);
     if (pPriority != nullptr)
