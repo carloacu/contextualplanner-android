@@ -178,6 +178,32 @@ Java_com_contextualplanner_Problem_printGoals(
 
 
 extern "C"
+JNIEXPORT jobjectArray JNICALL
+Java_com_contextualplanner_Problem_getGoalsStr(
+        JNIEnv *env, jobject object) {
+    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jobjectArray>(env, [&]() {
+        return protectByMutexWithReturn<jobjectArray>([&]() {
+            auto* problemPtr = idToProblemUnsafe(toId(env, object));
+            std::vector<std::string> goalsStr;
+            if (problemPtr != nullptr)
+                goalsStr = problemPtr->getGoalsStr();
+
+            jobjectArray result;
+            result = (jobjectArray)env->NewObjectArray(goalsStr.size(),
+                                                       env->FindClass("java/lang/String"),
+                                                       env->NewStringUTF(""));
+
+            jsize arrayElt = 0;
+            for (const auto& currGoalsStr : goalsStr) {
+                env->SetObjectArrayElement(result, arrayElt++, env->NewStringUTF(currGoalsStr.c_str()));
+            }
+            return result;
+        });
+    }, nullptr);
+}
+
+
+extern "C"
 JNIEXPORT jstring JNICALL
 Java_com_contextualplanner_Problem_printFacts(
         JNIEnv *env, jobject object) {
