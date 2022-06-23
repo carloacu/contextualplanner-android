@@ -19,6 +19,6 @@ allprojects {
 ### Step 2. Add the dependency
 ```Kotlin
 dependencies {
-    implementation 'com.github.carloacu:contextualplanner-android:1.1.2'
+    implementation 'com.github.carloacu:contextualplanner-android:1.1.3'
 }
 ```
