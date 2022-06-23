@@ -60,11 +60,17 @@ Java_com_contextualplanner_ContextualPlannerKt_replaceVariables(
 
 
 extern "C"
-JNIEXPORT jstring JNICALL
+JNIEXPORT jobject JNICALL
 Java_com_contextualplanner_ContextualPlannerKt_lookForAnActionToDo(
         JNIEnv *env, jclass /*clazz*/, jobject problemObject, jobject domainObject) {
-    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jstring>(env, [&]() {
-        return protectByMutexWithReturn<jstring>([&]() {
+    jclass actionAndGoalClass = env->FindClass(
+            "com/contextualplanner/ActionAndGoal");
+    jmethodID actionAndGoalClassConstructor =
+            env->GetMethodID(actionAndGoalClass, "<init>",
+                             "(Ljava/lang/String;Ljava/lang/String;)V");
+
+    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jobject>(env, [&]() {
+        return protectByMutexWithReturn<jobject>([&]() {
             auto *domainPtr = idToDomainUnsafe(toId(env, domainObject));
             auto *problemPtr = idToProblemUnsafe(toId(env, problemObject));
             if (domainPtr != nullptr && problemPtr != nullptr) {
@@ -72,11 +78,19 @@ Java_com_contextualplanner_ContextualPlannerKt_lookForAnActionToDo(
                 auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
                 auto action = cp::lookForAnActionToDo(parameters, *problemPtr, domainPtr->domain,
                                                       now, &problemPtr->historical);
-                return env->NewStringUTF(action.c_str());
+
+                return env->NewObject(actionAndGoalClass, actionAndGoalClassConstructor,
+                                      env->NewStringUTF(action.c_str()),
+                                      env->NewStringUTF(action.c_str()));
             }
-            return env->NewStringUTF("");
+            return env->NewObject(actionAndGoalClass, actionAndGoalClassConstructor,
+                                  env->NewStringUTF(""),
+                                  env->NewStringUTF(""));
         });
-    }, env->NewStringUTF(""));
+    }, env->NewObject(actionAndGoalClass, actionAndGoalClassConstructor,
+                      env->NewStringUTF(""),
+                      env->NewStringUTF(""))
+                      );
 }
 
 

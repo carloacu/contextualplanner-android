@@ -36,9 +36,11 @@ abstract class DisposableWithId(
     abstract fun disposeImplementation()
 }
 
+class ActionAndGoal private constructor(actionId: String, goal: String)
+
 external fun replaceVariables(str: String, problem: Problem): String
 
-external fun lookForAnActionToDo(problem: Problem, domain: Domain): String
+external fun lookForAnActionToDo(problem: Problem, domain: Domain): ActionAndGoal
 
 fun notifyActionDone(action: Action, problem: Problem, domain: Domain) {
     notifyActionDone(action.id, problem, domain)
