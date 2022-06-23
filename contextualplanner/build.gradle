@@ -12,7 +12,7 @@ afterEvaluate {
 
                 groupId = 'com.github.carloacu'
                 artifactId = 'contextual-planner'
-                version = '1.1.3'
+                version = '1.1.4'
             }
         }
     }
