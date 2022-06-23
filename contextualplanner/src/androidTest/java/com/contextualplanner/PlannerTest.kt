@@ -2,6 +2,7 @@ package com.contextualplanner
 
 import org.junit.Test
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import java.lang.Thread.sleep
 
 
@@ -114,5 +115,27 @@ class PlannerTest {
         notifyActionDone(greetActionId, problem, domain)
         sleep(2000)
         assertEquals("", lookForAnActionToDo(problem, domain))
+    }
+
+
+    @Test
+    fun getGoals() {
+        val problem = Problem()
+        problem.addGoals(arrayOf(Goal(9, checkedInFact, true, maxTimeToKeepInactive = 1)))
+        problem.addGoals(arrayOf(Goal(10, greetedFact)))
+        val goals = problem.getGoals()
+        assertTrue(goals != null)
+        assertEquals(2, goals!!.size)
+        val firstGoal = goals[0]
+        assertEquals(greetedFact, firstGoal.name)
+        assertEquals(10, firstGoal.priority)
+        assertEquals(true, firstGoal.stackable)
+        assertEquals(-1, firstGoal.maxTimeToKeepInactive)
+
+        val secondGoal = goals[1]
+        assertEquals(checkedInFact, secondGoal.name)
+        assertEquals(9, secondGoal.priority)
+        assertEquals(true, secondGoal.stackable)
+        assertEquals(1, secondGoal.maxTimeToKeepInactive)
     }
 }

@@ -76,12 +76,13 @@ Java_com_contextualplanner_ContextualPlannerKt_lookForAnActionToDo(
             if (domainPtr != nullptr && problemPtr != nullptr) {
                 std::map<std::string, std::string> parameters;
                 auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
+                std::string goal;
                 auto action = cp::lookForAnActionToDo(parameters, *problemPtr, domainPtr->domain,
-                                                      now, &problemPtr->historical);
+                                                      now, &goal, &problemPtr->historical);
 
                 return env->NewObject(actionAndGoalClass, actionAndGoalClassConstructor,
                                       env->NewStringUTF(action.c_str()),
-                                      env->NewStringUTF(action.c_str()));
+                                      env->NewStringUTF(goal.c_str()));
             }
             return env->NewObject(actionAndGoalClass, actionAndGoalClassConstructor,
                                   env->NewStringUTF(""),

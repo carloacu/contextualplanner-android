@@ -31,9 +31,9 @@ class Problem : DisposableWithId(newProblem()) {
 
     external fun printGoals(goalNameMaxSize: Int): String
 
-    external fun printFacts(): String
+    external fun getGoals(): Array<Goal>?
 
-    external fun getGoalsStr(): Array<String>
+    external fun printFacts(): String
 }
 
 

@@ -176,27 +176,49 @@ Java_com_contextualplanner_Problem_printGoals(
     }, nullptr);
 }
 
-
 extern "C"
 JNIEXPORT jobjectArray JNICALL
-Java_com_contextualplanner_Problem_getGoalsStr(
+Java_com_contextualplanner_Problem_getGoals(
         JNIEnv *env, jobject object) {
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jobjectArray>(env, [&]() {
         return protectByMutexWithReturn<jobjectArray>([&]() {
             auto* problemPtr = idToProblemUnsafe(toId(env, object));
-            std::vector<std::string> goalsStr;
-            if (problemPtr != nullptr)
-                goalsStr = problemPtr->getGoalsStr();
+            jclass goalClass = env->FindClass("com/contextualplanner/Goal");
+            jmethodID goalClassConstructor =
+                    env->GetMethodID(goalClass, "<init>",
+                                     "(ILjava/lang/String;ZILjava/lang/String;)V");
 
             jobjectArray result;
-            result = (jobjectArray)env->NewObjectArray(goalsStr.size(),
-                                                       env->FindClass("java/lang/String"),
-                                                       env->NewStringUTF(""));
+            if (problemPtr != nullptr)
+            {
+                auto& goals = problemPtr->goals();
 
-            jsize arrayElt = 0;
-            for (const auto& currGoalsStr : goalsStr) {
-                env->SetObjectArrayElement(result, arrayElt++, env->NewStringUTF(currGoalsStr.c_str()));
+                std::vector<std::pair<int, cp::Goal>> prioritiesToGoal;
+                for (auto itGoalsGroup = goals.end(); itGoalsGroup != goals.begin(); )
+                {
+                    --itGoalsGroup;
+                    for (auto& currGoal : itGoalsGroup->second)
+                        prioritiesToGoal.emplace_back(itGoalsGroup->first, currGoal);
+                }
+
+                result = (jobjectArray)env->NewObjectArray(prioritiesToGoal.size(), goalClass,
+                                                           env->NewObject(goalClass, goalClassConstructor,
+                                                                          0, env->NewStringUTF(""),
+                                                                          true, -1, env->NewStringUTF("")));
+
+                jsize arrayElt = 0;
+                for (const auto& currPriorityToGoal : prioritiesToGoal) {
+                    env->SetObjectArrayElement(result, arrayElt++,
+                                               env->NewObject(goalClass, goalClassConstructor,
+                                                              currPriorityToGoal.first,
+                                                              env->NewStringUTF(currPriorityToGoal.second.toStr().c_str()),
+                                                              currPriorityToGoal.second.isStackable(),
+                                                              currPriorityToGoal.second.getMaxTimeToKeepInactive(),
+                                                              env->NewStringUTF(currPriorityToGoal.second.getGoalGroupId().c_str())));
+                }
+                return result;
             }
+            result = (jobjectArray)env->NewObjectArray(0, goalClass, env->NewStringUTF(""));
             return result;
         });
     }, nullptr);
