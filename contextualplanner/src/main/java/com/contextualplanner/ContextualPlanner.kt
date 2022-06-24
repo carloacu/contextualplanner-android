@@ -36,7 +36,7 @@ abstract class DisposableWithId(
     abstract fun disposeImplementation()
 }
 
-data class ActionAndGoal(val actionId: String, val goal: String)
+data class ActionAndGoal(val actionId: String, val goal: Goal)
 
 external fun replaceVariables(str: String, problem: Problem): String
 

@@ -225,12 +225,7 @@ Java_com_contextualplanner_Problem_getGoals(
                 jsize arrayElt = 0;
                 for (const auto& currPriorityToGoal : prioritiesToGoal) {
                     env->SetObjectArrayElement(result, arrayElt++,
-                                               env->NewObject(goalClass, goalClassConstructor,
-                                                              currPriorityToGoal.first,
-                                                              env->NewStringUTF(currPriorityToGoal.second.toStr().c_str()),
-                                                              currPriorityToGoal.second.isStackable(),
-                                                              currPriorityToGoal.second.getMaxTimeToKeepInactive(),
-                                                              env->NewStringUTF(currPriorityToGoal.second.getGoalGroupId().c_str())));
+                                               newJavaGoal(env, currPriorityToGoal.first, currPriorityToGoal.second));
                 }
                 return result;
             }

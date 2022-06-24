@@ -88,3 +88,18 @@ cp::Goal toGoal(JNIEnv *env, jobject goal, int* pPriority)
         *pPriority = _getIntFromMethod(env, goalClass, goal, "getPriority");
     return res;
 }
+
+
+jobject newJavaGoal(JNIEnv *env, int pPriority, const cp::Goal& pGoal)
+{
+    jclass goalClass = env->FindClass("com/contextualplanner/Goal");
+    jmethodID goalClassConstructor =
+            env->GetMethodID(goalClass, "<init>",
+                             "(ILjava/lang/String;ZILjava/lang/String;)V");
+    return env->NewObject(goalClass, goalClassConstructor,
+                          pPriority,
+                          env->NewStringUTF(pGoal.toStr().c_str()),
+                          pGoal.isStackable(),
+                          pGoal.getMaxTimeToKeepInactive(),
+                          env->NewStringUTF(pGoal.getGoalGroupId().c_str()));
+}

@@ -54,5 +54,7 @@ PlannerAction toPlannerAction(JNIEnv *env, jobject action);
 
 cp::Goal toGoal(JNIEnv *env, jobject goal, int* pPriority);
 
+jobject newJavaGoal(JNIEnv *env, int pPriority, const cp::Goal& pGoal);
+
 
 #endif // CONTEXTUALPLANNER_JOBJECTSCONVERSIONS_HPP

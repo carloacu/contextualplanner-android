@@ -24,7 +24,10 @@ class PlannerTest {
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
         problem.addGoals(arrayOf(Goal(10, checkedInFact)))
-        assertEquals(checkInActionId, lookForAnActionToDo(problem, domain))
+        val actionAndGoal = lookForAnActionToDo(problem, domain)
+        assertEquals(checkInActionId, actionAndGoal.actionId)
+        assertEquals(checkedInFact, actionAndGoal.goal.name)
+        assertEquals(10, actionAndGoal.goal.priority)
     }
 
 
@@ -36,9 +39,9 @@ class PlannerTest {
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
         problem.addGoals(arrayOf(Goal(10, checkedInFact)))
-        assertEquals(greetActionId, lookForAnActionToDo(problem, domain))
+        assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
         notifyActionDone(greetActionId, problem, domain)
-        assertEquals(checkInActionId, lookForAnActionToDo(problem, domain))
+        assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
     }
 
     @Test
@@ -53,7 +56,7 @@ class PlannerTest {
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
         problem.addGoals(arrayOf(Goal(9, informedAboutTheCompanyFact)))
 
-        assertEquals(greetActionId, lookForAnActionToDo(problem, domain))
+        assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
     }
 
 
@@ -66,9 +69,9 @@ class PlannerTest {
         val problem = Problem()
         problem.addGoals(arrayOf(Goal(9, checkedInFact, stackable = true)))
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
-        assertEquals(greetActionId, lookForAnActionToDo(problem, domain))
+        assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
         notifyActionDone(greetActionId, problem, domain)
-        assertEquals(checkInActionId, lookForAnActionToDo(problem, domain))
+        assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
     }
 
 
@@ -81,9 +84,9 @@ class PlannerTest {
         val problem = Problem()
         problem.addGoals(arrayOf(Goal(9, checkedInFact, stackable = false)))
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
-        assertEquals(greetActionId, lookForAnActionToDo(problem, domain))
+        assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
         notifyActionDone(greetActionId, problem, domain)
-        assertEquals("", lookForAnActionToDo(problem, domain))
+        assertEquals("", lookForAnActionToDo(problem, domain).actionId)
     }
 
 
@@ -96,9 +99,9 @@ class PlannerTest {
         val problem = Problem()
         problem.addGoals(arrayOf(Goal(9, checkedInFact, true, maxTimeToKeepInactive = 10)))
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
-        assertEquals(greetActionId, lookForAnActionToDo(problem, domain))
+        assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
         notifyActionDone(greetActionId, problem, domain)
-        assertEquals(checkInActionId, lookForAnActionToDo(problem, domain))
+        assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
     }
 
 
@@ -111,10 +114,10 @@ class PlannerTest {
         val problem = Problem()
         problem.addGoals(arrayOf(Goal(9, checkedInFact, true, maxTimeToKeepInactive = 1)))
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
-        assertEquals(greetActionId, lookForAnActionToDo(problem, domain))
+        assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
         notifyActionDone(greetActionId, problem, domain)
         sleep(2000)
-        assertEquals("", lookForAnActionToDo(problem, domain))
+        assertEquals("", lookForAnActionToDo(problem, domain).actionId)
     }
 
 

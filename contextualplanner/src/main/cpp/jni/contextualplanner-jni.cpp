@@ -67,7 +67,7 @@ Java_com_contextualplanner_ContextualPlannerKt_lookForAnActionToDo(
             "com/contextualplanner/ActionAndGoal");
     jmethodID actionAndGoalClassConstructor =
             env->GetMethodID(actionAndGoalClass, "<init>",
-                             "(Ljava/lang/String;Ljava/lang/String;)V");
+                             "(Ljava/lang/String;Lcom/contextualplanner/Goal;)V");
 
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jobject>(env, [&]() {
         return protectByMutexWithReturn<jobject>([&]() {
@@ -76,22 +76,24 @@ Java_com_contextualplanner_ContextualPlannerKt_lookForAnActionToDo(
             if (domainPtr != nullptr && problemPtr != nullptr) {
                 std::map<std::string, std::string> parameters;
                 auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-                std::string goal;
+                const cp::Goal* goal = nullptr;
+                int priority = 0;
                 auto action = cp::lookForAnActionToDo(parameters, *problemPtr, domainPtr->domain,
-                                                      now, &goal, &problemPtr->historical);
+                                                      now, &goal, &priority, &problemPtr->historical);
 
-                return env->NewObject(actionAndGoalClass, actionAndGoalClassConstructor,
-                                      env->NewStringUTF(action.c_str()),
-                                      env->NewStringUTF(goal.c_str()));
+                if (goal != nullptr)
+                    return env->NewObject(actionAndGoalClass, actionAndGoalClassConstructor,
+                                          env->NewStringUTF(action.c_str()),
+                                          newJavaGoal(env, priority, *goal));
             }
             return env->NewObject(actionAndGoalClass, actionAndGoalClassConstructor,
                                   env->NewStringUTF(""),
-                                  env->NewStringUTF(""));
+                                  newJavaGoal(env, 0, cp::Goal("goal_name", true, -1, "")));
         });
     }, env->NewObject(actionAndGoalClass, actionAndGoalClassConstructor,
                       env->NewStringUTF(""),
-                      env->NewStringUTF(""))
-                      );
+                      newJavaGoal(env, 0, cp::Goal("goal_name", true, -1, ""))
+                      ));
 }
 
 
