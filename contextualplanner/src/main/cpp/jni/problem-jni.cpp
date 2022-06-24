@@ -77,6 +77,22 @@ Java_com_contextualplanner_Problem_pushBackGoal(
     });
 }
 
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_contextualplanner_Problem_setGoalPriority(
+        JNIEnv *env, jobject object, jstring jGoalStr,
+        int pPriority,
+        jboolean pPushFrontOrBttomInCaseOfConflictWithAnotherGoal) {
+    protectByMutex([&]() {
+        auto goalStr = toString(env, jGoalStr);
+        auto* problemPtr = idToProblemUnsafe(toId(env, object));
+        if (problemPtr != nullptr)
+            problemPtr->setGoalPriority(goalStr, pPriority, pPushFrontOrBttomInCaseOfConflictWithAnotherGoal);
+    });
+}
+
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_contextualplanner_Problem_addFact(

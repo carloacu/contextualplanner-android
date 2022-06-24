@@ -17,6 +17,8 @@ class Problem : DisposableWithId(newProblem()) {
 
     external fun pushBackGoal(goal: Goal)
 
+    external fun setGoalPriority(goalName: String, priority: Int, pushFrontOrBttomInCaseOfConflictWithAnotherGoal: Boolean)
+
     external fun addFact(fact: String)
 
     external fun removeFact(fact: String)

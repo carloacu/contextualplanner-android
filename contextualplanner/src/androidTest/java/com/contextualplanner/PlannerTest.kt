@@ -138,4 +138,23 @@ class PlannerTest {
         assertEquals(true, secondGoal.stackable)
         assertEquals(1, secondGoal.maxTimeToKeepInactive)
     }
+
+    @Test
+    fun setGoalPriority() {
+        val problem = Problem()
+        problem.addGoals(arrayOf(Goal(9, checkedInFact)))
+        problem.addGoals(arrayOf(Goal(10, greetedFact)))
+        problem.setGoalPriority(greetedFact, 8, true)
+
+        val goals = problem.getGoals()
+        assertTrue(goals != null)
+        assertEquals(2, goals!!.size)
+        val firstGoal = goals[0]
+        assertEquals(checkedInFact, firstGoal.name)
+        assertEquals(9, firstGoal.priority)
+
+        val secondGoal = goals[1]
+        assertEquals(greetedFact, secondGoal.name)
+        assertEquals(8, secondGoal.priority)
+    }
 }
