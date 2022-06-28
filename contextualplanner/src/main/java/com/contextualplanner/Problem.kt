@@ -21,6 +21,8 @@ class Problem : DisposableWithId(newProblem()) {
 
     external fun addFact(fact: String)
 
+    external fun hasFact(fact: String): Boolean
+
     external fun removeFact(fact: String)
 
     external fun modifyFacts(facts: String)

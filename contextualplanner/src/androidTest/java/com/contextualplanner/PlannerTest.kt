@@ -1,8 +1,7 @@
 package com.contextualplanner
 
+import org.junit.Assert.*
 import org.junit.Test
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import java.lang.Thread.sleep
 
 
@@ -159,5 +158,26 @@ class PlannerTest {
         val secondGoal = goals[1]
         assertEquals(greetedFact, secondGoal.name)
         assertEquals(8, secondGoal.priority)
+    }
+
+
+    @Test
+    fun goalCondition() {
+        val problem = Problem()
+        val goalStr = "imply($greetedFact, $checkedInFact)"
+        problem.addGoals(arrayOf(Goal(9, goalStr)))
+
+        val goals = problem.getGoals()
+        assertTrue(goals != null)
+        assertEquals(1, goals!!.size)
+        val firstGoal = goals[0]
+        assertEquals(goalStr, firstGoal.name)
+        val condition = firstGoal.condition ?: ""
+        assertEquals(greetedFact, firstGoal.condition)
+        assertFalse(problem.hasFact(condition))
+        problem.addFact(condition)
+        assertTrue(problem.hasFact(condition))
+        problem.removeFact(condition)
+        assertFalse(problem.hasFact(condition))
     }
 }

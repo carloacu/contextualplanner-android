@@ -105,6 +105,21 @@ Java_com_contextualplanner_Problem_addFact(
     });
 }
 
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_contextualplanner_Problem_hasFact(
+        JNIEnv *env, jobject object, jstring jFact) {
+    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jboolean>(env, [&]() {
+        return protectByMutexWithReturn<jboolean>([&]() {
+            auto fact = toString(env, jFact);
+            auto* problemPtr = idToProblemUnsafe(toId(env, object));
+            if (problemPtr != nullptr)
+                return problemPtr->hasFact(fact);
+            return false;
+        });
+    }, false);
+}
+
 
 extern "C"
 JNIEXPORT void JNICALL
@@ -202,7 +217,7 @@ Java_com_contextualplanner_Problem_getGoals(
             jclass goalClass = env->FindClass("com/contextualplanner/Goal");
             jmethodID goalClassConstructor =
                     env->GetMethodID(goalClass, "<init>",
-                                     "(ILjava/lang/String;ZILjava/lang/String;)V");
+                                     "(ILjava/lang/String;ZLjava/lang/String;ILjava/lang/String;)V");
 
             jobjectArray result;
             if (problemPtr != nullptr)
@@ -220,7 +235,8 @@ Java_com_contextualplanner_Problem_getGoals(
                 result = (jobjectArray)env->NewObjectArray(prioritiesToGoal.size(), goalClass,
                                                            env->NewObject(goalClass, goalClassConstructor,
                                                                           0, env->NewStringUTF(""),
-                                                                          true, -1, env->NewStringUTF("")));
+                                                                          true, env->NewStringUTF(""),
+                                                                          -1, env->NewStringUTF("")));
 
                 jsize arrayElt = 0;
                 for (const auto& currPriorityToGoal : prioritiesToGoal) {
