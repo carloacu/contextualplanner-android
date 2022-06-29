@@ -29,7 +29,7 @@ Java_com_contextualplanner_Problem_00024Companion_newProblem(
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jint>(env, [&]() {
         return protectByMutexWithReturn<jint>([&]() {
             jint newLocalMemory = findMissingKey(_idToRobotPlannerProblem);
-            auto& newMemTracker = _idToRobotPlannerProblem[newLocalMemory];
+            _idToRobotPlannerProblem[newLocalMemory];
             return newLocalMemory;
         });
     }, -1);

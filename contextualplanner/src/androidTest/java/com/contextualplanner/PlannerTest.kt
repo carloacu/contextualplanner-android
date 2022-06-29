@@ -180,4 +180,45 @@ class PlannerTest {
         problem.removeFact(condition)
         assertFalse(problem.hasFact(condition))
     }
+
+
+    @Test
+    fun goalRemovedTracker() {
+        val actions = mutableListOf<Action>()
+        actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
+        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        val domain = Domain(actions.toTypedArray())
+        val problem = Problem()
+        val goalRemovedTracker = GoalRemovedTracker(problem)
+        val goalRemovedTracker2 = GoalRemovedTracker(problem)
+        assertEquals(0, goalRemovedTracker.flushGoalRemoved().size)
+        problem.addGoals(arrayOf(Goal(9, checkedInFact)))
+        problem.addGoals(arrayOf(Goal(10, greetedFact)))
+        assertEquals(0, goalRemovedTracker.flushGoalRemoved().size)
+        assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
+        notifyActionDone(greetActionId, problem, domain)
+        assertEquals(0, goalRemovedTracker.flushGoalRemoved().size)
+        assertEquals(0, goalRemovedTracker2.flushGoalRemoved().size)
+        assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
+        notifyActionDone(checkInActionId, problem, domain)
+
+        var goalsRemoved = goalRemovedTracker.flushGoalRemoved()
+        assertEquals(1, goalsRemoved.size)
+        assertEquals(greetedFact, goalsRemoved[0])
+
+        assertEquals(0, goalRemovedTracker.flushGoalRemoved().size)
+        assertEquals("", lookForAnActionToDo(problem, domain).actionId)
+
+        goalsRemoved = goalRemovedTracker.flushGoalRemoved()
+        assertEquals(1, goalsRemoved.size)
+        assertEquals(checkedInFact, goalsRemoved[0])
+
+        goalsRemoved = goalRemovedTracker2.flushGoalRemoved()
+        assertEquals(2, goalsRemoved.size)
+        assertEquals(checkedInFact, goalsRemoved[0])
+        assertEquals(greetedFact, goalsRemoved[1])
+
+        goalRemovedTracker2.dispose()
+        goalRemovedTracker.dispose()
+    }
 }

@@ -35,8 +35,11 @@ if (ANDROID)
           "jni/jobjectsconversions.cpp"
           "jni/contextualplanner-jni.hpp"
           "jni/contextualplanner-jni.cpp"
+          "jni/domain-jni.hpp"
           "jni/domain-jni.cpp"
+          "jni/problem-jni.hpp"
           "jni/problem-jni.cpp"
+          "jni/goalremovedtracker-jni.cpp"
     )
 
     if (COUT_TO_ANDROID_LOG)
