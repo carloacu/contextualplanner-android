@@ -175,12 +175,37 @@ class PlannerTest {
         val condition = firstGoal.condition ?: ""
         assertEquals(greetedFact, firstGoal.condition)
         assertFalse(problem.hasFact(condition))
+
+        val actions = mutableListOf<Action>()
+        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        val domain = Domain(actions.toTypedArray())
+        assertEquals("", lookForAnActionToDo(problem, domain).actionId)
+        assertEquals(0, problem.getGoals()!!.size) // goal remove because it is not persistent
+
         problem.addFact(condition)
         assertTrue(problem.hasFact(condition))
         problem.removeFact(condition)
         assertFalse(problem.hasFact(condition))
     }
 
+
+    @Test
+    fun persistImplication() {
+        val problem = Problem()
+        val goalStr = "persist(imply($greetedFact, $checkedInFact))"
+        problem.addGoals(arrayOf(Goal(9, goalStr)))
+
+        val actions = mutableListOf<Action>()
+        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        val domain = Domain(actions.toTypedArray())
+        assertEquals("", lookForAnActionToDo(problem, domain).actionId)
+        assertEquals(1, problem.getGoals()!!.size)
+        problem.addFact(greetedFact)
+        assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
+        problem.addFact(checkedInFact)
+        assertEquals("", lookForAnActionToDo(problem, domain).actionId)
+        assertEquals(1, problem.getGoals()!!.size)
+    }
 
     @Test
     fun goalRemovedTracker() {
