@@ -221,4 +221,18 @@ class PlannerTest {
         goalRemovedTracker2.dispose()
         goalRemovedTracker.dispose()
     }
+
+
+    @Test
+    fun persistGoalReprint() {
+        val problem = Problem()
+        val goalStr = "persist(imply($greetedFact, $checkedInFact))"
+        problem.addGoals(arrayOf(Goal(9, goalStr)))
+        val goals = problem.getGoals()
+        assertTrue(goals != null)
+        assertEquals(1, goals!!.size)
+        assertEquals(goalStr, goals[0].name)
+    }
+
+
 }
