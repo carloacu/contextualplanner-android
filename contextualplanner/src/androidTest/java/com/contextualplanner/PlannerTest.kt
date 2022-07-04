@@ -3,7 +3,7 @@ package com.contextualplanner
 import org.junit.Assert.*
 import org.junit.Test
 import java.lang.Thread.sleep
-
+import com.contextualplanner.trackers.*
 
 class PlannerTest {
 
@@ -208,43 +208,84 @@ class PlannerTest {
     }
 
     @Test
-    fun goalRemovedTracker() {
+    fun goalsRemovedTracker() {
         val actions = mutableListOf<Action>()
         actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
         actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
-        val goalRemovedTracker = GoalRemovedTracker(problem)
-        val goalRemovedTracker2 = GoalRemovedTracker(problem)
-        assertEquals(0, goalRemovedTracker.flushGoalRemoved().size)
+        val goalsRemovedTracker = GoalsRemovedTracker(problem)
+        val goalsRemovedTracker2 = GoalsRemovedTracker(problem)
+        assertEquals(0, goalsRemovedTracker.flushGoalsRemoved().size)
         problem.addGoals(arrayOf(Goal(9, checkedInFact)))
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
-        assertEquals(0, goalRemovedTracker.flushGoalRemoved().size)
+        assertEquals(0, goalsRemovedTracker.flushGoalsRemoved().size)
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
         notifyActionDone(greetActionId, problem, domain)
-        assertEquals(0, goalRemovedTracker.flushGoalRemoved().size)
-        assertEquals(0, goalRemovedTracker2.flushGoalRemoved().size)
+        assertEquals(0, goalsRemovedTracker.flushGoalsRemoved().size)
+        assertEquals(0, goalsRemovedTracker2.flushGoalsRemoved().size)
         assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
         notifyActionDone(checkInActionId, problem, domain)
 
-        var goalsRemoved = goalRemovedTracker.flushGoalRemoved()
+        var goalsRemoved = goalsRemovedTracker.flushGoalsRemoved()
         assertEquals(1, goalsRemoved.size)
         assertEquals(greetedFact, goalsRemoved[0])
 
-        assertEquals(0, goalRemovedTracker.flushGoalRemoved().size)
+        assertEquals(0, goalsRemovedTracker.flushGoalsRemoved().size)
         assertEquals("", lookForAnActionToDo(problem, domain).actionId)
 
-        goalsRemoved = goalRemovedTracker.flushGoalRemoved()
+        goalsRemoved = goalsRemovedTracker.flushGoalsRemoved()
         assertEquals(1, goalsRemoved.size)
         assertEquals(checkedInFact, goalsRemoved[0])
 
-        goalsRemoved = goalRemovedTracker2.flushGoalRemoved()
+        goalsRemoved = goalsRemovedTracker2.flushGoalsRemoved()
         assertEquals(2, goalsRemoved.size)
         assertEquals(checkedInFact, goalsRemoved[0])
         assertEquals(greetedFact, goalsRemoved[1])
 
-        goalRemovedTracker2.dispose()
-        goalRemovedTracker.dispose()
+        goalsRemovedTracker2.dispose()
+        goalsRemovedTracker.dispose()
+    }
+
+
+    @Test
+    fun factsAddedTracker() {
+        val actions = mutableListOf<Action>()
+        actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
+        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        val domain = Domain(actions.toTypedArray())
+        val problem = Problem()
+        val factsAddedTracker = FactsAddedTracker(problem)
+        val factsAddedTracker2 = FactsAddedTracker(problem)
+        problem.addGoals(arrayOf(Goal(9, checkedInFact)))
+        problem.addGoals(arrayOf(Goal(10, greetedFact)))
+        assertEquals(0, factsAddedTracker.flushFactsAdded().size)
+        assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
+        notifyActionDone(greetActionId, problem, domain)
+
+        var factsAdded = factsAddedTracker.flushFactsAdded()
+        assertEquals(1, factsAdded.size)
+        assertEquals(greetedFact, factsAdded[0])
+
+        assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
+        notifyActionDone(checkInActionId, problem, domain)
+
+        factsAdded = factsAddedTracker.flushFactsAdded()
+        assertEquals(1, factsAdded.size)
+        assertEquals(checkedInFact, factsAdded[0])
+
+        assertEquals(0, factsAddedTracker.flushFactsAdded().size)
+        assertEquals("", lookForAnActionToDo(problem, domain).actionId)
+
+        assertEquals(0, factsAddedTracker.flushFactsAdded().size)
+
+        factsAdded = factsAddedTracker2.flushFactsAdded()
+        assertEquals(2, factsAdded.size)
+        assertEquals(checkedInFact, factsAdded[0])
+        assertEquals(greetedFact, factsAdded[1])
+
+        factsAddedTracker2.dispose()
+        factsAddedTracker.dispose()
     }
 
 

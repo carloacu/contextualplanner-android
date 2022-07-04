@@ -5,11 +5,11 @@
 #include <map>
 #include <set>
 #include <memory>
-#include "androidlog.hpp"
-#include "contextualplanner-jni.hpp"
-#include "jobjectsconversions.hpp"
-#include "problem-jni.hpp"
-#include <contextualplanner/goalsremovedtracker.hpp>
+#include "../androidlog.hpp"
+#include "../contextualplanner-jni.hpp"
+#include "../jobjectsconversions.hpp"
+#include "../problem-jni.hpp"
+#include <contextualplanner/trackers/goalsremovedtracker.hpp>
 
 namespace {
     class GoalsRemovedCollector {
@@ -46,7 +46,7 @@ namespace {
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_com_contextualplanner_GoalRemovedTracker_00024Companion_newGoalRemovedTracker(
+Java_com_contextualplanner_trackers_GoalsRemovedTracker_00024Companion_newGoalsRemovedTracker(
         JNIEnv *env, jobject /*object*/, jobject problemObject) {
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jint>(env, [&]() {
         return protectByMutexWithReturn<jint>([&]() {
@@ -59,6 +59,7 @@ Java_com_contextualplanner_GoalRemovedTracker_00024Companion_newGoalRemovedTrack
                 });
                 return newObjectId;
             }
+            return -1;
         });
     }, -1);
 }
@@ -66,7 +67,7 @@ Java_com_contextualplanner_GoalRemovedTracker_00024Companion_newGoalRemovedTrack
 
 extern "C"
 JNIEXPORT jobjectArray JNICALL
-Java_com_contextualplanner_GoalRemovedTracker_flushGoalRemoved(
+Java_com_contextualplanner_trackers_GoalsRemovedTracker_flushGoalsRemoved(
         JNIEnv *env, jobject jobject) {
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jobjectArray>(env, [&]() {
         return protectByMutexWithReturn<jobjectArray>([&]() {
@@ -94,7 +95,7 @@ Java_com_contextualplanner_GoalRemovedTracker_flushGoalRemoved(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_GoalRemovedTracker_disposeImplementation(
+Java_com_contextualplanner_trackers_GoalsRemovedTracker_disposeImplementation(
         JNIEnv *env, jobject object) {
     protectByMutex([&]() {
         _idToGoalsRemovedCollector.erase(toId(env, object));
