@@ -257,6 +257,7 @@ class PlannerTest {
         val problem = Problem()
         val factsAddedTracker = FactsAddedTracker(problem)
         val factsAddedTracker2 = FactsAddedTracker(problem)
+        val factsAddedTracker3 = FactsAddedTracker(problem)
         problem.addGoals(arrayOf(Goal(9, checkedInFact)))
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
         assertEquals(0, factsAddedTracker.flushFactsAdded().size)
@@ -284,6 +285,13 @@ class PlannerTest {
         assertEquals(checkedInFact, factsAdded[0])
         assertEquals(greetedFact, factsAdded[1])
 
+        problem.removeFact(checkedInFact)
+
+        factsAdded = factsAddedTracker3.flushFactsAdded()
+        assertEquals(1, factsAdded.size)
+        assertEquals(greetedFact, factsAdded[0])
+
+        factsAddedTracker3.dispose()
         factsAddedTracker2.dispose()
         factsAddedTracker.dispose()
     }

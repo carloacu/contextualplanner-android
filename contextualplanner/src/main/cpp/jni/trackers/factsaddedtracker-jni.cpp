@@ -9,7 +9,7 @@
 #include "../contextualplanner-jni.hpp"
 #include "../jobjectsconversions.hpp"
 #include "../problem-jni.hpp"
-#include <contextualplanner/trackers/factsaddedtracker.hpp>
+#include <contextualplanner/trackers/factschangedtracker.hpp>
 
 
 namespace {
@@ -18,7 +18,8 @@ namespace {
         FactsAddedCollector(const cp::Problem& problem)
                 : tracker(problem),
                   factsAdded(),
-                  factsAddedConnection()
+                  factsAddedConnection(),
+                  factsRemovedConnection()
         {
         }
 
@@ -26,11 +27,15 @@ namespace {
             try {
                 factsAddedConnection.disconnect();
             } catch (... ) {}
+            try {
+                factsRemovedConnection.disconnect();
+            } catch (... ) {}
         }
 
-        cp::FactsAddedTracker tracker;
+        cp::FactsChangedTracker tracker;
         std::set<cp::Fact> factsAdded;
         cpstd::observable::Connection factsAddedConnection;
+        cpstd::observable::Connection factsRemovedConnection;
     };
 
     std::map<jint, FactsAddedCollector> _idToFactsAddedCollector;
@@ -56,6 +61,10 @@ Java_com_contextualplanner_trackers_FactsAddedTracker_00024Companion_newFactsAdd
                 auto& factsAddedTracker = _idToFactsAddedCollector.emplace(newObjectId, *problemPtr).first->second;
                 factsAddedTracker.factsAddedConnection = factsAddedTracker.tracker.onFactsAdded.connectUnsafe([&](const std::set<cp::Fact>& pFacts) {
                     factsAddedTracker.factsAdded.insert(pFacts.begin(), pFacts.end());
+                });
+                factsAddedTracker.factsRemovedConnection = factsAddedTracker.tracker.onFactsRemoved.connectUnsafe([&](const std::set<cp::Fact>& pFacts) {
+                    for (auto& currFact : pFacts)
+                        factsAddedTracker.factsAdded.erase(currFact);
                 });
                 return newObjectId;
             }
