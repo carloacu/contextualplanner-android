@@ -80,6 +80,22 @@ Java_com_contextualplanner_Problem_pushBackGoal(
 
 extern "C"
 JNIEXPORT void JNICALL
+Java_com_contextualplanner_Problem_removeGoals(
+        JNIEnv *env, jobject object, jstring jGoalGroupStr) {
+    protectByMutex([&]() {
+        auto goalGroupStr = toString(env, jGoalGroupStr);
+        auto* problemPtr = idToProblemUnsafe(toId(env, object));
+        if (problemPtr != nullptr)
+        {
+            auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
+            problemPtr->removeGoals(goalGroupStr, now);
+        }
+    });
+}
+
+
+extern "C"
+JNIEXPORT void JNICALL
 Java_com_contextualplanner_Problem_setGoalPriority(
         JNIEnv *env, jobject object, jstring jGoalStr,
         int pPriority,
@@ -91,6 +107,78 @@ Java_com_contextualplanner_Problem_setGoalPriority(
             problemPtr->setGoalPriority(goalStr, pPriority, pPushFrontOrBttomInCaseOfConflictWithAnotherGoal);
     });
 }
+
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_contextualplanner_Problem_printFacts(
+        JNIEnv *env, jobject object) {
+    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jstring>(env, [&]() {
+        return protectByMutexWithReturn<jstring>([&]() {
+            auto* problemPtr = idToProblemUnsafe(toId(env, object));
+            if (problemPtr != nullptr)
+            {
+                std::string res;
+                auto& facts = problemPtr->facts();
+                for (auto& fact : facts) {
+                    if (!res.empty())
+                        res += ", ";
+                    res += fact.toStr();
+                }
+                return env->NewStringUTF(res.c_str());
+            }
+            return env->NewStringUTF("");
+        });
+    }, nullptr);
+}
+
+extern "C"
+JNIEXPORT jobjectArray JNICALL
+Java_com_contextualplanner_Problem_getGoals(
+        JNIEnv *env, jobject object) {
+    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jobjectArray>(env, [&]() {
+        return protectByMutexWithReturn<jobjectArray>([&]() {
+            auto* problemPtr = idToProblemUnsafe(toId(env, object));
+            jclass goalClass = env->FindClass("com/contextualplanner/Goal");
+            jmethodID goalClassConstructor =
+                    env->GetMethodID(goalClass, "<init>",
+                                     "(ILjava/lang/String;ZLjava/lang/String;ILjava/lang/String;)V");
+
+            jobjectArray result;
+            if (problemPtr != nullptr)
+            {
+                auto& goals = problemPtr->goals();
+
+                std::vector<std::pair<int, cp::Goal>> prioritiesToGoal;
+                for (auto itGoalsGroup = goals.end(); itGoalsGroup != goals.begin(); )
+                {
+                    --itGoalsGroup;
+                    for (auto& currGoal : itGoalsGroup->second)
+                        prioritiesToGoal.emplace_back(itGoalsGroup->first, currGoal);
+                }
+
+                result = (jobjectArray)env->NewObjectArray(prioritiesToGoal.size(), goalClass,
+                                                           env->NewObject(goalClass, goalClassConstructor,
+                                                                          0, env->NewStringUTF(""),
+                                                                          true, env->NewStringUTF(""),
+                                                                          -1, env->NewStringUTF("")));
+
+                jsize arrayElt = 0;
+                for (const auto& currPriorityToGoal : prioritiesToGoal) {
+                    env->SetObjectArrayElement(result, arrayElt++,
+                                               newJavaGoal(env, currPriorityToGoal.first, currPriorityToGoal.second));
+                }
+                return result;
+            }
+            result = (jobjectArray)env->NewObjectArray(0, goalClass, env->NewStringUTF(""));
+            return result;
+        });
+    }, nullptr);
+}
+
+
+
+
 
 
 extern "C"
@@ -206,72 +294,3 @@ Java_com_contextualplanner_Problem_printGoals(
         });
     }, nullptr);
 }
-
-extern "C"
-JNIEXPORT jobjectArray JNICALL
-Java_com_contextualplanner_Problem_getGoals(
-        JNIEnv *env, jobject object) {
-    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jobjectArray>(env, [&]() {
-        return protectByMutexWithReturn<jobjectArray>([&]() {
-            auto* problemPtr = idToProblemUnsafe(toId(env, object));
-            jclass goalClass = env->FindClass("com/contextualplanner/Goal");
-            jmethodID goalClassConstructor =
-                    env->GetMethodID(goalClass, "<init>",
-                                     "(ILjava/lang/String;ZLjava/lang/String;ILjava/lang/String;)V");
-
-            jobjectArray result;
-            if (problemPtr != nullptr)
-            {
-                auto& goals = problemPtr->goals();
-
-                std::vector<std::pair<int, cp::Goal>> prioritiesToGoal;
-                for (auto itGoalsGroup = goals.end(); itGoalsGroup != goals.begin(); )
-                {
-                    --itGoalsGroup;
-                    for (auto& currGoal : itGoalsGroup->second)
-                        prioritiesToGoal.emplace_back(itGoalsGroup->first, currGoal);
-                }
-
-                result = (jobjectArray)env->NewObjectArray(prioritiesToGoal.size(), goalClass,
-                                                           env->NewObject(goalClass, goalClassConstructor,
-                                                                          0, env->NewStringUTF(""),
-                                                                          true, env->NewStringUTF(""),
-                                                                          -1, env->NewStringUTF("")));
-
-                jsize arrayElt = 0;
-                for (const auto& currPriorityToGoal : prioritiesToGoal) {
-                    env->SetObjectArrayElement(result, arrayElt++,
-                                               newJavaGoal(env, currPriorityToGoal.first, currPriorityToGoal.second));
-                }
-                return result;
-            }
-            result = (jobjectArray)env->NewObjectArray(0, goalClass, env->NewStringUTF(""));
-            return result;
-        });
-    }, nullptr);
-}
-
-
-extern "C"
-JNIEXPORT jstring JNICALL
-Java_com_contextualplanner_Problem_printFacts(
-        JNIEnv *env, jobject object) {
-    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jstring>(env, [&]() {
-        return protectByMutexWithReturn<jstring>([&]() {
-            auto* problemPtr = idToProblemUnsafe(toId(env, object));
-            if (problemPtr != nullptr)
-            {
-                std::string res;
-                auto& facts = problemPtr->facts();
-                for (auto& fact : facts) {
-                    if (!res.empty())
-                        res += ", ";
-                    res += fact.toStr();
-                }
-                return env->NewStringUTF(res.c_str());
-            }
-            return env->NewStringUTF("");
-        });
-    }, nullptr);
-}
-

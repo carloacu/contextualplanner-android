@@ -17,7 +17,13 @@ class Problem : DisposableWithId(newProblem()) {
 
     external fun pushBackGoal(goal: Goal)
 
+    external fun removeGoals(goalGroupId: String)
+
     external fun setGoalPriority(goalName: String, priority: Int, pushFrontOrBttomInCaseOfConflictWithAnotherGoal: Boolean)
+
+    external fun printGoals(goalNameMaxSize: Int): String
+
+    external fun getGoals(): Array<Goal>?
 
     external fun addFact(fact: String)
 
@@ -32,10 +38,6 @@ class Problem : DisposableWithId(newProblem()) {
     external fun removeFirstGoalsThatAreAlreadySatisfied()
 
     external fun addVariableToValue(variableName: String, variableValue: String)
-
-    external fun printGoals(goalNameMaxSize: Int): String
-
-    external fun getGoals(): Array<Goal>?
 
     external fun printFacts(): String
 }

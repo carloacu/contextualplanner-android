@@ -75,6 +75,22 @@ class PlannerTest {
 
 
     @Test
+    fun removeAGoal() {
+        val actions = mutableListOf<Action>()
+        actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
+        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        val domain = Domain(actions.toTypedArray())
+        val problem = Problem()
+        val greetGoalGroupId = "greetGoalGroupId"
+        problem.addGoals(arrayOf(Goal(9, checkedInFact)))
+        problem.addGoals(arrayOf(Goal(10, greetedFact, groupId = greetGoalGroupId)))
+        assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
+        assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
+        problem.removeGoals(greetGoalGroupId)
+        assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
+    }
+
+    @Test
     fun goalNotStackable() {
         val actions = mutableListOf<Action>()
         actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
