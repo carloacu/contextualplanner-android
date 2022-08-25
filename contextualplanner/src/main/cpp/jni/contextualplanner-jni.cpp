@@ -8,9 +8,8 @@
 #include <contextualplanner/contextualplanner.hpp>
 #include <contextualplanner/util/replacevariables.hpp>
 #include "androidlog.hpp"
-#include "domain-jni.hpp"
-#include "problem-jni.hpp"
-
+#include "types/domain-jni.hpp"
+#include "types/problem-jni.hpp"
 
 
 namespace {
@@ -43,32 +42,16 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     return JNI_VERSION_1_6;
 }
 
-extern "C"
-JNIEXPORT jstring JNICALL
-Java_com_contextualplanner_ContextualPlannerKt_replaceVariables(
-        JNIEnv *env, jclass /*clazz*/, jstring jStr, jobject problemObject) {
-    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jstring>(env, [&]() {
-        return protectByMutexWithReturn<jstring>([&]() {
-            auto *problemPtr = idToProblemUnsafe(toId(env, problemObject));
-            auto str = toString(env, jStr);
-            if (problemPtr != nullptr) {
-                cp::replaceVariables(str, problemPtr->variablesToValue());
-            }
-            return env->NewStringUTF(str.c_str());
-        });
-    }, nullptr);
-}
-
 
 extern "C"
 JNIEXPORT jobject JNICALL
 Java_com_contextualplanner_ContextualPlannerKt_lookForAnActionToDo(
         JNIEnv *env, jclass /*clazz*/, jobject problemObject, jobject domainObject) {
     jclass actionAndGoalClass = env->FindClass(
-            "com/contextualplanner/ActionAndGoal");
+            "com/contextualplanner/types/ActionAndGoal");
     jmethodID actionAndGoalClassConstructor =
             env->GetMethodID(actionAndGoalClass, "<init>",
-                             "(Ljava/lang/String;Lcom/contextualplanner/Goal;)V");
+                             "(Ljava/lang/String;Lcom/contextualplanner/types/Goal;)V");
 
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jobject>(env, [&]() {
         return protectByMutexWithReturn<jobject>([&]() {
@@ -95,29 +78,5 @@ Java_com_contextualplanner_ContextualPlannerKt_lookForAnActionToDo(
                       env->NewStringUTF(""),
                       newJavaGoal(env, 0, cp::Goal("goal_name", -1, ""))
                       ));
-}
-
-
-
-extern "C"
-JNIEXPORT void JNICALL
-Java_com_contextualplanner_ContextualPlannerKt_notifyActionDone(
-        JNIEnv *env, jclass /*clazz*/, jstring jActionId, jobject problemObject, jobject domainObject) {
-    convertCppExceptionsToJavaExceptions(env, [&]() {
-        return protectByMutex([&]() {
-            auto *domainPtr = idToDomainUnsafe(toId(env, domainObject));
-            auto *problemPtr = idToProblemUnsafe(toId(env, problemObject));
-            if (domainPtr != nullptr && problemPtr != nullptr) {
-                auto actionId = toString(env, jActionId);
-                auto itAction = domainPtr->idToPlannerActions.find(actionId);
-                if (itAction != domainPtr->idToPlannerActions.end())
-                {
-                    std::map<std::string, std::string> parameters;
-                    auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-                    problemPtr->notifyActionDone(actionId, parameters, itAction->second.effect, now, &itAction->second.goalsToAdd);
-                }
-            }
-        });
-    });
 }
 

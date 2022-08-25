@@ -31,16 +31,18 @@ if (ANDROID)
           # Provides a relative path to your source file(s).
           "jni/androidlog.hpp"
 
-          "jni/trackers/factsaddedtracker-jni.cpp"
-          "jni/trackers/goalsremovedtracker-jni.cpp"
+          "jni/util/trackers/factsaddedtracker-jni.cpp"
+          "jni/util/trackers/goalsremovedtracker-jni.cpp"
+          "jni/util/print-jni.cpp"
+          "jni/util/replacevariables-jni.cpp"
           "jni/jobjectsconversions.hpp"
           "jni/jobjectsconversions.cpp"
           "jni/contextualplanner-jni.hpp"
           "jni/contextualplanner-jni.cpp"
-          "jni/domain-jni.hpp"
-          "jni/domain-jni.cpp"
-          "jni/problem-jni.hpp"
-          "jni/problem-jni.cpp"
+          "jni/types/domain-jni.hpp"
+          "jni/types/domain-jni.cpp"
+          "jni/types/problem-jni.hpp"
+          "jni/types/problem-jni.cpp"
     )
 
     if (COUT_TO_ANDROID_LOG)

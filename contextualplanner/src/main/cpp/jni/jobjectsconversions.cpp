@@ -24,7 +24,7 @@ namespace {
 
     std::map<int, std::vector<cp::Goal>> _getGoalArrayFromMethod(JNIEnv *pEnv, jclass pClass, jobject pOjbect, const char * pFunctionName)
     {
-        jmethodID getFun = pEnv->GetMethodID(pClass, pFunctionName, "()[Lcom/contextualplanner/Goal;");
+        jmethodID getFun = pEnv->GetMethodID(pClass, pFunctionName, "()[Lcom/contextualplanner/types/Goal;");
         auto jGoals = reinterpret_cast<jobjectArray>(pEnv->CallObjectMethod(pOjbect, getFun));
         return toGoals(pEnv, jGoals);
     }
@@ -55,7 +55,7 @@ std::map<int, std::vector<cp::Goal>> toGoals(JNIEnv *env, jobjectArray jGoals) {
 }
 
 jint toId(JNIEnv *env, jobject object) {
-    jclass semanticMemoryClass = env->FindClass("com/contextualplanner/DisposableWithId");
+    jclass semanticMemoryClass = env->FindClass("com/contextualplanner/types/detail/DisposableWithId");
     jmethodID getIdFun = env->GetMethodID(semanticMemoryClass, "getId", "()I");
     return env->CallIntMethod(object, getIdFun);
 }
@@ -63,7 +63,7 @@ jint toId(JNIEnv *env, jobject object) {
 
 PlannerAction toPlannerAction(JNIEnv *env, jobject action)
 {
-    jclass actionClass = env->FindClass("com/contextualplanner/Action");
+    jclass actionClass = env->FindClass("com/contextualplanner/types/Action");
     PlannerAction res;
     res.id = _getStringFromMethod(env, actionClass, action, "getId");
     static const char sep = ',';
@@ -78,11 +78,11 @@ PlannerAction toPlannerAction(JNIEnv *env, jobject action)
 
 cp::Goal toGoal(JNIEnv *env, jobject goal, int* pPriority)
 {
-    jclass goalClass = env->FindClass("com/contextualplanner/Goal");
-    auto name = _getStringFromMethod(env, goalClass, goal, "getName");
+    jclass goalClass = env->FindClass("com/contextualplanner/types/Goal");
+    auto fact = _getStringFromMethod(env, goalClass, goal, "getFact");
     int maxTimeToKeepInactive = _getIntFromMethod(env, goalClass, goal, "getMaxTimeToKeepInactive");
     auto groupId = _getStringFromMethod(env, goalClass, goal, "getGroupId");
-    cp::Goal res(name, maxTimeToKeepInactive, groupId);
+    cp::Goal res(fact, maxTimeToKeepInactive, groupId);
     if (pPriority != nullptr)
         *pPriority = _getIntFromMethod(env, goalClass, goal, "getPriority");
     return res;
@@ -91,7 +91,7 @@ cp::Goal toGoal(JNIEnv *env, jobject goal, int* pPriority)
 
 jobject newJavaGoal(JNIEnv *env, int pPriority, const cp::Goal& pGoal)
 {
-    jclass goalClass = env->FindClass("com/contextualplanner/Goal");
+    jclass goalClass = env->FindClass("com/contextualplanner/types/Goal");
     jmethodID goalClassConstructor =
             env->GetMethodID(goalClass, "<init>",
                              "(ILjava/lang/String;Ljava/lang/String;ILjava/lang/String;)V");

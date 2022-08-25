@@ -4,7 +4,7 @@
 #include <map>
 #include <jni.h>
 #include <contextualplanner/contextualplanner.hpp>
-#include "jobjectsconversions.hpp"
+#include "../jobjectsconversions.hpp"
 
 
 struct PlannerDomain {

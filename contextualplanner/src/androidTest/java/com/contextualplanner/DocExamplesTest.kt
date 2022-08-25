@@ -1,60 +1,22 @@
-# Contextual Planner Android
+package com.contextualplanner
 
+import com.contextualplanner.types.Action
+import com.contextualplanner.types.Domain
+import com.contextualplanner.types.Goal
+import com.contextualplanner.types.Problem
+import org.junit.Assert.*
+import org.junit.Test
 
-## Description
+class DocExamplesTest {
 
-This is Kotlin library to do plannification adapted for social context.<br/>
-It is wrapper of a C++ implementation available here: https://github.com/carloacu/contextualplanner
+    @Test
+    fun planningDummyExampleTest() {
 
-To read the description of this library, please go here: https://github.com/carloacu/contextualplanner
-
-
-## To use the library in your project
-
-### Step 1. Add the maven repository to your build file
-Add it in your root build.gradle at the end of repositories:
-```Kotlin
-allprojects {
-    repositories {
-        ...
-        maven { url 'https://raw.github.com/carloacu/contextualplanner-android-releases/master' }
-    }
-}
-```
-
-### Step 2. Add the dependency
-```Kotlin
-dependencies {
-    implementation 'com.github.carloacu:contextualplanner-android:1.1.13'
-}
-```
-
-
-## Code documentation
-
-[Here](contextualplanner/src/main/java/com/contextualplanner/ContextualPlanner.kt) are the documented headers of the main function.
-
-### Types
-
-Here are the types providec by this library:
-
-* [Action](contextualplanner/src/main/java/com/contextualplanner/types/Action.kt): Axiomatic thing that the bot can do.
-* [Domain](contextualplanner/src/main/java/com/contextualplanner/types/Domain.kt): Set of all the actions that the bot can do.
-* [Goal](contextualplanner/src/main/java/com/contextualplanner/types/Goal.kt): A characteristic that the world should have. It is the motivation of the bot for doing actions to respect this characteristic of the world.
-* [Problem](contextualplanner/src/main/java/com/contextualplanner/types/Problem.kt): Current world, goal for the world and historical of actions done.
-
-
-
-## Examples of usage
-
-Here is an example with only one action to do:
-
-```kotlin
         // Fact
-        val sayHiActionId = "say_hi"
+        val userIsGreetedFact = "user_is_greeted"
 
         // Action identifier
-        val userIsGreetedFact = "user_is_greeted"
+        val sayHiActionId = "say_hi"
 
         // Initialize the domain with an action
         val actions = mutableListOf<Action>()
@@ -73,13 +35,12 @@ Here is an example with only one action to do:
         // Look for the next action to do
         val actionAndGoal2 = lookForAnActionToDo(problem, domain)
         assertEquals("", actionAndGoal2.actionId)
-```
+    }
 
 
-Here is an example with two actions to do and with the usage of preconditions:
+    @Test
+    fun planningExampleWithAPreconditionSolvedTest() {
 
-
-```kotlin
         // Facts
         val userIsGreetedFact = "user_is_greeted"
         val proposedOurHelpToUser = "proposed_our_help_to_user"
@@ -111,4 +72,7 @@ Here is an example with two actions to do and with the usage of preconditions:
         // Look for the next action to do
         val actionAndGoal3 = lookForAnActionToDo(problem, domain)
         assertEquals("", actionAndGoal3.actionId)
-```
+    }
+
+
+}

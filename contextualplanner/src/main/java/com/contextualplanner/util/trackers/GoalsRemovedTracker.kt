@@ -1,8 +1,8 @@
-package com.contextualplanner.trackers
+package com.contextualplanner.util.trackers
 
-import com.contextualplanner.DisposableWithId
-import com.contextualplanner.Problem
-import com.contextualplanner.ensureInitialized
+import com.contextualplanner.types.Problem
+import com.contextualplanner.types.detail.DisposableWithId
+import com.contextualplanner.util.detail.ensureInitialized
 
 
 class GoalsRemovedTracker(problem: Problem) : DisposableWithId(newGoalsRemovedTracker(problem)) {

@@ -5,10 +5,10 @@
 #include <map>
 #include <set>
 #include <memory>
-#include "../androidlog.hpp"
-#include "../contextualplanner-jni.hpp"
-#include "../jobjectsconversions.hpp"
-#include "../problem-jni.hpp"
+#include "../../androidlog.hpp"
+#include "../../contextualplanner-jni.hpp"
+#include "../../jobjectsconversions.hpp"
+#include "../../types/problem-jni.hpp"
 #include <contextualplanner/util/trackers/factschangedtracker.hpp>
 
 
@@ -51,7 +51,7 @@ namespace {
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_com_contextualplanner_trackers_FactsAddedTracker_00024Companion_newFactsAddedTracker(
+Java_com_contextualplanner_util_trackers_FactsAddedTracker_00024Companion_newFactsAddedTracker(
         JNIEnv *env, jobject /*object*/, jobject problemObject) {
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jint>(env, [&]() {
         return protectByMutexWithReturn<jint>([&]() {
@@ -76,7 +76,7 @@ Java_com_contextualplanner_trackers_FactsAddedTracker_00024Companion_newFactsAdd
 
 extern "C"
 JNIEXPORT jobjectArray JNICALL
-Java_com_contextualplanner_trackers_FactsAddedTracker_flushFactsAdded(
+Java_com_contextualplanner_util_trackers_FactsAddedTracker_flushFactsAdded(
         JNIEnv *env, jobject jobject) {
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jobjectArray>(env, [&]() {
         return protectByMutexWithReturn<jobjectArray>([&]() {
@@ -104,7 +104,7 @@ Java_com_contextualplanner_trackers_FactsAddedTracker_flushFactsAdded(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_trackers_FactsAddedTracker_disposeImplementation(
+Java_com_contextualplanner_util_trackers_FactsAddedTracker_disposeImplementation(
         JNIEnv *env, jobject object) {
     protectByMutex([&]() {
         _idToFactsAddedCollector.erase(toId(env, object));

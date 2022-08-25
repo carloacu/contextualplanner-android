@@ -1,13 +1,7 @@
-#include <regex>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <map>
-#include <set>
-#include <memory>
-#include "androidlog.hpp"
-#include "contextualplanner-jni.hpp"
-#include "jobjectsconversions.hpp"
+#include "../androidlog.hpp"
+#include "../contextualplanner-jni.hpp"
+#include "../jobjectsconversions.hpp"
+#include "domain-jni.hpp"
 #include <contextualplanner/util/print.hpp>
 
 namespace {
@@ -24,7 +18,7 @@ cp::Problem* idToProblemUnsafe(jint id) {
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_com_contextualplanner_Problem_00024Companion_newProblem(
+Java_com_contextualplanner_types_Problem_00024Companion_newProblem(
         JNIEnv *env, jobject /*object*/) {
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jint>(env, [&]() {
         return protectByMutexWithReturn<jint>([&]() {
@@ -38,16 +32,30 @@ Java_com_contextualplanner_Problem_00024Companion_newProblem(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_Problem_disposeImplementation(
-        JNIEnv *env, jobject object) {
-    protectByMutex([&]() {
-        _idToRobotPlannerProblem.erase(toId(env, object));
+Java_com_contextualplanner_types_Problem_notifyActionDone(
+        JNIEnv *env, jobject object, jstring jActionId, jobject domainObject) {
+    convertCppExceptionsToJavaExceptions(env, [&]() {
+        return protectByMutex([&]() {
+            auto *domainPtr = idToDomainUnsafe(toId(env, domainObject));
+            auto *problemPtr = idToProblemUnsafe(toId(env, object));
+            if (domainPtr != nullptr && problemPtr != nullptr) {
+                auto actionId = toString(env, jActionId);
+                auto itAction = domainPtr->idToPlannerActions.find(actionId);
+                if (itAction != domainPtr->idToPlannerActions.end())
+                {
+                    std::map<std::string, std::string> parameters;
+                    auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
+                    problemPtr->notifyActionDone(actionId, parameters, itAction->second.effect, now, &itAction->second.goalsToAdd);
+                }
+            }
+        });
     });
 }
 
+
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_Problem_pushFrontGoal(
+Java_com_contextualplanner_types_Problem_pushFrontGoal(
         JNIEnv *env, jobject object, jobject jGoal) {
     protectByMutex([&]() {
         int priority = 10;
@@ -63,7 +71,7 @@ Java_com_contextualplanner_Problem_pushFrontGoal(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_Problem_pushBackGoal(
+Java_com_contextualplanner_types_Problem_pushBackGoal(
         JNIEnv *env, jobject object, jobject jGoal) {
     protectByMutex([&]() {
         int priority = 10;
@@ -80,7 +88,7 @@ Java_com_contextualplanner_Problem_pushBackGoal(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_Problem_removeGoals(
+Java_com_contextualplanner_types_Problem_removeGoals(
         JNIEnv *env, jobject object, jstring jGoalGroupStr) {
     protectByMutex([&]() {
         auto goalGroupStr = toString(env, jGoalGroupStr);
@@ -96,50 +104,27 @@ Java_com_contextualplanner_Problem_removeGoals(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_Problem_setGoalPriority(
+Java_com_contextualplanner_types_Problem_setGoalPriority(
         JNIEnv *env, jobject object, jstring jGoalStr,
         int pPriority,
-        jboolean pPushFrontOrBttomInCaseOfConflictWithAnotherGoal) {
+        jboolean pPushFrontOrBottomInCaseOfConflictWithAnotherGoal) {
     protectByMutex([&]() {
         auto goalStr = toString(env, jGoalStr);
         auto* problemPtr = idToProblemUnsafe(toId(env, object));
         if (problemPtr != nullptr)
-            problemPtr->changeGoalPriority(goalStr, pPriority, pPushFrontOrBttomInCaseOfConflictWithAnotherGoal);
+            problemPtr->changeGoalPriority(goalStr, pPriority, pPushFrontOrBottomInCaseOfConflictWithAnotherGoal);
     });
 }
 
 
 extern "C"
-JNIEXPORT jstring JNICALL
-Java_com_contextualplanner_Problem_printFacts(
-        JNIEnv *env, jobject object) {
-    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jstring>(env, [&]() {
-        return protectByMutexWithReturn<jstring>([&]() {
-            auto* problemPtr = idToProblemUnsafe(toId(env, object));
-            if (problemPtr != nullptr)
-            {
-                std::string res;
-                auto& facts = problemPtr->facts();
-                for (auto& fact : facts) {
-                    if (!res.empty())
-                        res += ", ";
-                    res += fact.toStr();
-                }
-                return env->NewStringUTF(res.c_str());
-            }
-            return env->NewStringUTF("");
-        });
-    }, nullptr);
-}
-
-extern "C"
 JNIEXPORT jobjectArray JNICALL
-Java_com_contextualplanner_Problem_getGoals(
+Java_com_contextualplanner_types_Problem_getGoals(
         JNIEnv *env, jobject object) {
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jobjectArray>(env, [&]() {
         return protectByMutexWithReturn<jobjectArray>([&]() {
             auto* problemPtr = idToProblemUnsafe(toId(env, object));
-            jclass goalClass = env->FindClass("com/contextualplanner/Goal");
+            jclass goalClass = env->FindClass("com/contextualplanner/types/Goal");
             jmethodID goalClassConstructor =
                     env->GetMethodID(goalClass, "<init>",
                                      "(ILjava/lang/String;Ljava/lang/String;ILjava/lang/String;)V");
@@ -183,7 +168,7 @@ Java_com_contextualplanner_Problem_getGoals(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_Problem_addFact(
+Java_com_contextualplanner_types_Problem_addFact(
         JNIEnv *env, jobject object, jstring jFact) {
     protectByMutex([&]() {
         auto fact = toString(env, jFact);
@@ -195,7 +180,7 @@ Java_com_contextualplanner_Problem_addFact(
 
 extern "C"
 JNIEXPORT jboolean JNICALL
-Java_com_contextualplanner_Problem_hasFact(
+Java_com_contextualplanner_types_Problem_hasFact(
         JNIEnv *env, jobject object, jstring jFact) {
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jboolean>(env, [&]() {
         return protectByMutexWithReturn<jboolean>([&]() {
@@ -211,7 +196,7 @@ Java_com_contextualplanner_Problem_hasFact(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_Problem_removeFact(
+Java_com_contextualplanner_types_Problem_removeFact(
         JNIEnv *env, jobject object, jstring jFact) {
     protectByMutex([&]() {
         auto fact = toString(env, jFact);
@@ -224,7 +209,7 @@ Java_com_contextualplanner_Problem_removeFact(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_Problem_modifyFacts(
+Java_com_contextualplanner_types_Problem_modifyFacts(
         JNIEnv *env, jobject object, jstring jFacts) {
     protectByMutex([&]() {
         static const char sep = ',';
@@ -237,7 +222,7 @@ Java_com_contextualplanner_Problem_modifyFacts(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_Problem_addGoals(
+Java_com_contextualplanner_types_Problem_addGoals(
         JNIEnv *env, jobject object, jobjectArray jGoals) {
     protectByMutex([&]() {
         auto* problemPtr = idToProblemUnsafe(toId(env, object));
@@ -251,7 +236,7 @@ Java_com_contextualplanner_Problem_addGoals(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_Problem_removeFirstGoalsThatAreAlreadySatisfied(
+Java_com_contextualplanner_types_Problem_removeFirstGoalsThatAreAlreadySatisfied(
         JNIEnv *env, jobject object) {
     protectByMutex([&]() {
         auto* problemPtr = idToProblemUnsafe(toId(env, object));
@@ -263,7 +248,7 @@ Java_com_contextualplanner_Problem_removeFirstGoalsThatAreAlreadySatisfied(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_Problem_addVariableToValue(
+Java_com_contextualplanner_types_Problem_addVariableToValue(
         JNIEnv *env, jobject object, jstring jVariableName, jstring jVariableValue) {
     protectByMutex([&]() {
         auto variableName = toString(env, jVariableName);
@@ -277,20 +262,11 @@ Java_com_contextualplanner_Problem_addVariableToValue(
 }
 
 
-
 extern "C"
-JNIEXPORT jstring JNICALL
-Java_com_contextualplanner_Problem_printGoals(
-        JNIEnv *env, jobject object, int goalNameMaxSize) {
-    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jstring>(env, [&]() {
-        return protectByMutexWithReturn<jstring>([&]() {
-            auto* problemPtr = idToProblemUnsafe(toId(env, object));
-            if (problemPtr != nullptr)
-            {
-                auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-                return env->NewStringUTF(cp::printGoals(goalNameMaxSize, *problemPtr, now).c_str());
-            }
-            return env->NewStringUTF("");
-        });
-    }, nullptr);
+JNIEXPORT void JNICALL
+Java_com_contextualplanner_types_Problem_disposeImplementation(
+        JNIEnv *env, jobject object) {
+    protectByMutex([&]() {
+        _idToRobotPlannerProblem.erase(toId(env, object));
+    });
 }

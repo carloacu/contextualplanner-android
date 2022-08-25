@@ -1,51 +1,34 @@
 package com.contextualplanner
 
-import java.io.ByteArrayOutputStream
-import java.io.IOException
-import java.io.InputStream
+import com.contextualplanner.types.*
 
 
 /**
- * Function to load the C++ library.
- * It's internal because the calls are hidden in the constructor of the objects.
+ * @brief Ask the planner to get the next action to do.
+ * @param[in, out] pProblem Problem of the planner.
+ * @param[in] pDomain Domain of the planner
+ * @return A class containing the action to do and the goal that motivated to do this action.
  */
-var isLoaded = false
-internal fun ensureInitialized() = synchronized(isLoaded) {
-    if (!isLoaded) {
-        System.loadLibrary("contextualplanner-jni")
-        isLoaded = true
-    }
-}
-
-/**
- * A disposable class that store an id and do the dispose code only at the first call.
- */
-abstract class DisposableWithId(
-    val id: Int
-) {
-    var isDisposed = false
-        private set
-
-    fun dispose() {
-        if (!isDisposed) {
-            disposeImplementation()
-            isDisposed = true
-        }
-    }
-
-    abstract fun disposeImplementation()
-}
-
-data class ActionAndGoal(val actionId: String, val goal: Goal)
-
-external fun replaceVariables(str: String, problem: Problem): String
-
 external fun lookForAnActionToDo(problem: Problem, domain: Domain): ActionAndGoal
 
+
+/**
+ * @brief Notify that an action has been done.
+ * @param action Action finished.
+ * @param problem Problem to be notified.
+ * @param domain Domain containing all the possible actions.
+ */
 fun notifyActionDone(action: Action, problem: Problem, domain: Domain) {
-    notifyActionDone(action.id, problem, domain)
+    problem.notifyActionDone(action.id, domain)
 }
 
-external fun notifyActionDone(idAction: String, problem: Problem, domain: Domain)
 
-
+/**
+ * @brief Notify that an action has been done.
+ * @param actionId Action identifier, of the finished action.
+ * @param problem Problem to be notified.
+ * @param domain Domain containing all the possible actions.
+ */
+fun notifyActionDone(actionId: String, problem: Problem, domain: Domain) {
+    problem.notifyActionDone(actionId, domain)
+}

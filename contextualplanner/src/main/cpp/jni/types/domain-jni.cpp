@@ -1,13 +1,6 @@
 #include "domain-jni.hpp"
-#include <regex>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <map>
-#include <set>
-#include <memory>
-#include "contextualplanner-jni.hpp"
-#include "jobjectsconversions.hpp"
+#include "../contextualplanner-jni.hpp"
+#include "../jobjectsconversions.hpp"
 
 
 namespace {
@@ -30,7 +23,7 @@ const PlannerDomain* idToDomainUnsafe(jint id) {
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_com_contextualplanner_Domain_00024Companion_newDomain(
+Java_com_contextualplanner_types_Domain_00024Companion_newDomain(
         JNIEnv *env, jobject /*object*/, jobjectArray jactions) {
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jint>(env, [&]() {
         return protectByMutexWithReturn<jint>([&]() {
@@ -56,7 +49,7 @@ Java_com_contextualplanner_Domain_00024Companion_newDomain(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_Domain_addAction(
+Java_com_contextualplanner_types_Domain_addAction(
         JNIEnv *env, jobject object, jobject jaction) {
     convertCppExceptionsToJavaExceptions(env, [&]() {
         protectByMutex([&]() {
@@ -73,7 +66,7 @@ Java_com_contextualplanner_Domain_addAction(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_Domain_removeAction(
+Java_com_contextualplanner_types_Domain_removeAction(
         JNIEnv *env, jobject object, jstring jactionStr) {
     convertCppExceptionsToJavaExceptions(env, [&]() {
         protectByMutex([&]() {
@@ -89,26 +82,8 @@ Java_com_contextualplanner_Domain_removeAction(
 
 
 extern "C"
-JNIEXPORT jstring JNICALL
-Java_com_contextualplanner_Domain_printActions(
-        JNIEnv *env, jobject object) {
-    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jstring>(env, [&]() {
-        return protectByMutexWithReturn<jstring>([&]() {
-            auto it = _idToRobotPlannerDomain.find(toId(env, object));
-            if (it == _idToRobotPlannerDomain.end())
-                return env->NewStringUTF("");
-            std::string res;
-            for (auto& action : it->second.domain.actions())
-                res += action.first + "\n";
-            return env->NewStringUTF(res.c_str());
-        });
-    }, nullptr);
-}
-
-
-extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_Domain_disposeImplementation(
+Java_com_contextualplanner_types_Domain_disposeImplementation(
         JNIEnv *env, jobject object) {
     protectByMutex([&]() {
         _idToRobotPlannerDomain.erase(toId(env, object));

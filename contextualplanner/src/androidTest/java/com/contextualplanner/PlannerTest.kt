@@ -1,9 +1,13 @@
 package com.contextualplanner
 
+import com.contextualplanner.types.Action
+import com.contextualplanner.types.Domain
+import com.contextualplanner.types.Goal
+import com.contextualplanner.types.Problem
 import org.junit.Assert.*
 import org.junit.Test
 import java.lang.Thread.sleep
-import com.contextualplanner.trackers.*
+import com.contextualplanner.util.trackers.*
 
 class PlannerTest {
 
@@ -25,7 +29,7 @@ class PlannerTest {
         problem.addGoals(arrayOf(Goal(10, checkedInFact)))
         val actionAndGoal = lookForAnActionToDo(problem, domain)
         assertEquals(checkInActionId, actionAndGoal.actionId)
-        assertEquals(checkedInFact, actionAndGoal.goal.name)
+        assertEquals(checkedInFact, actionAndGoal.goal.fact)
         assertEquals(10, actionAndGoal.goal.priority)
     }
 
@@ -39,7 +43,7 @@ class PlannerTest {
         val problem = Problem()
         problem.addGoals(arrayOf(Goal(10, checkedInFact)))
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
-        notifyActionDone(greetActionId, problem, domain)
+        problem.notifyActionDone(greetActionId, domain)
         assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
     }
 
@@ -68,7 +72,7 @@ class PlannerTest {
         problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = -1))) // maxTimeToKeepInactive = -1 means stackable
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
-        notifyActionDone(greetActionId, problem, domain)
+        problem.notifyActionDone(greetActionId, domain)
         assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
     }
 
@@ -99,7 +103,7 @@ class PlannerTest {
         problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = 0))) // maxTimeToKeepInactive = 0 means not stackable
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
-        notifyActionDone(greetActionId, problem, domain)
+        problem.notifyActionDone(greetActionId, domain)
         assertEquals("", lookForAnActionToDo(problem, domain).actionId)
     }
 
@@ -114,7 +118,7 @@ class PlannerTest {
         problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = 10)))
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
-        notifyActionDone(greetActionId, problem, domain)
+        problem.notifyActionDone(greetActionId, domain)
         assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
     }
 
@@ -129,7 +133,7 @@ class PlannerTest {
         problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = 1)))
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
-        notifyActionDone(greetActionId, problem, domain)
+        problem.notifyActionDone(greetActionId, domain)
         sleep(2000)
         assertEquals("", lookForAnActionToDo(problem, domain).actionId)
     }
@@ -144,12 +148,12 @@ class PlannerTest {
         assertTrue(goals != null)
         assertEquals(2, goals!!.size)
         val firstGoal = goals[0]
-        assertEquals(greetedFact, firstGoal.name)
+        assertEquals(greetedFact, firstGoal.fact)
         assertEquals(10, firstGoal.priority)
         assertEquals(-1, firstGoal.maxTimeToKeepInactive)
 
         val secondGoal = goals[1]
-        assertEquals(checkedInFact, secondGoal.name)
+        assertEquals(checkedInFact, secondGoal.fact)
         assertEquals(9, secondGoal.priority)
         assertEquals(1, secondGoal.maxTimeToKeepInactive)
     }
@@ -165,11 +169,11 @@ class PlannerTest {
         assertTrue(goals != null)
         assertEquals(2, goals!!.size)
         val firstGoal = goals[0]
-        assertEquals(checkedInFact, firstGoal.name)
+        assertEquals(checkedInFact, firstGoal.fact)
         assertEquals(9, firstGoal.priority)
 
         val secondGoal = goals[1]
-        assertEquals(greetedFact, secondGoal.name)
+        assertEquals(greetedFact, secondGoal.fact)
         assertEquals(8, secondGoal.priority)
     }
 
@@ -184,7 +188,7 @@ class PlannerTest {
         assertTrue(goals != null)
         assertEquals(1, goals!!.size)
         val firstGoal = goals[0]
-        assertEquals(goalStr, firstGoal.name)
+        assertEquals(goalStr, firstGoal.fact)
         val condition = firstGoal.condition ?: ""
         assertEquals(greetedFact, firstGoal.condition)
         assertFalse(problem.hasFact(condition))
@@ -234,11 +238,11 @@ class PlannerTest {
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
         assertEquals(0, goalsRemovedTracker.flushGoalsRemoved().size)
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
-        notifyActionDone(greetActionId, problem, domain)
+        problem.notifyActionDone(greetActionId, domain)
         assertEquals(0, goalsRemovedTracker.flushGoalsRemoved().size)
         assertEquals(0, goalsRemovedTracker2.flushGoalsRemoved().size)
         assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
-        notifyActionDone(checkInActionId, problem, domain)
+        problem.notifyActionDone(checkInActionId, domain)
 
         var goalsRemoved = goalsRemovedTracker.flushGoalsRemoved()
         assertEquals(1, goalsRemoved.size)
@@ -280,14 +284,14 @@ class PlannerTest {
         assertEquals(informedAboutTheCompanyFact, factsAdded[0])
 
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
-        notifyActionDone(greetActionId, problem, domain)
+        problem.notifyActionDone(greetActionId, domain)
 
         factsAdded = factsAddedTracker.flushFactsAdded()
         assertEquals(1, factsAdded.size)
         assertEquals(greetedFact, factsAdded[0])
 
         assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
-        notifyActionDone(checkInActionId, problem, domain)
+        problem.notifyActionDone(checkInActionId, domain)
 
         factsAdded = factsAddedTracker.flushFactsAdded()
         assertEquals(1, factsAdded.size)
@@ -324,7 +328,7 @@ class PlannerTest {
         val goals = problem.getGoals()
         assertTrue(goals != null)
         assertEquals(1, goals!!.size)
-        assertEquals(goalStr, goals[0].name)
+        assertEquals(goalStr, goals[0].fact)
     }
 
 
