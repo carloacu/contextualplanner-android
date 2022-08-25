@@ -99,13 +99,7 @@ Java_com_contextualplanner_Domain_printActions(
                 return env->NewStringUTF("");
             std::string res;
             for (auto& action : it->second.domain.actions())
-            {
-                if (action.second.effects.empty())
-                    res += action.first;
-                else
-                    res += action.first + " -> " + action.second.effects.toStr(",");
-                res += "\n";
-            }
+                res += action.first + "\n";
             return env->NewStringUTF(res.c_str());
         });
     }, nullptr);

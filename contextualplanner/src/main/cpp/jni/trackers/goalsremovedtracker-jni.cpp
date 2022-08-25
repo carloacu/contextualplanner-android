@@ -9,7 +9,7 @@
 #include "../contextualplanner-jni.hpp"
 #include "../jobjectsconversions.hpp"
 #include "../problem-jni.hpp"
-#include <contextualplanner/trackers/goalsremovedtracker.hpp>
+#include <contextualplanner/util/trackers/goalsremovedtracker.hpp>
 
 namespace {
     class GoalsRemovedCollector {

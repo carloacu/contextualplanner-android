@@ -58,7 +58,6 @@ class PlannerTest {
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
     }
 
-
     @Test
     fun goalStackable() {
         val actions = mutableListOf<Action>()
@@ -66,13 +65,12 @@ class PlannerTest {
         actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(9, checkedInFact, stackable = true)))
+        problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = -1))) // maxTimeToKeepInactive = -1 means stackable
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
         notifyActionDone(greetActionId, problem, domain)
         assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
     }
-
 
     @Test
     fun removeAGoal() {
@@ -90,6 +88,7 @@ class PlannerTest {
         assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
     }
 
+
     @Test
     fun goalNotStackable() {
         val actions = mutableListOf<Action>()
@@ -97,7 +96,7 @@ class PlannerTest {
         actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(9, checkedInFact, stackable = false)))
+        problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = 0))) // maxTimeToKeepInactive = 0 means not stackable
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
         notifyActionDone(greetActionId, problem, domain)
@@ -112,7 +111,7 @@ class PlannerTest {
         actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(9, checkedInFact, true, maxTimeToKeepInactive = 10)))
+        problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = 10)))
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
         notifyActionDone(greetActionId, problem, domain)
@@ -127,7 +126,7 @@ class PlannerTest {
         actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(9, checkedInFact, true, maxTimeToKeepInactive = 1)))
+        problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = 1)))
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
         notifyActionDone(greetActionId, problem, domain)
@@ -139,7 +138,7 @@ class PlannerTest {
     @Test
     fun getGoals() {
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(9, checkedInFact, true, maxTimeToKeepInactive = 1)))
+        problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = 1)))
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
         val goals = problem.getGoals()
         assertTrue(goals != null)
@@ -147,13 +146,11 @@ class PlannerTest {
         val firstGoal = goals[0]
         assertEquals(greetedFact, firstGoal.name)
         assertEquals(10, firstGoal.priority)
-        assertEquals(true, firstGoal.stackable)
         assertEquals(-1, firstGoal.maxTimeToKeepInactive)
 
         val secondGoal = goals[1]
         assertEquals(checkedInFact, secondGoal.name)
         assertEquals(9, secondGoal.priority)
-        assertEquals(true, secondGoal.stackable)
         assertEquals(1, secondGoal.maxTimeToKeepInactive)
     }
 

@@ -9,7 +9,7 @@
 #include "../contextualplanner-jni.hpp"
 #include "../jobjectsconversions.hpp"
 #include "../problem-jni.hpp"
-#include <contextualplanner/trackers/factschangedtracker.hpp>
+#include <contextualplanner/util/trackers/factschangedtracker.hpp>
 
 
 namespace {
@@ -68,6 +68,7 @@ Java_com_contextualplanner_trackers_FactsAddedTracker_00024Companion_newFactsAdd
                 });
                 return newObjectId;
             }
+            return -1;
         });
     }, -1);
 }

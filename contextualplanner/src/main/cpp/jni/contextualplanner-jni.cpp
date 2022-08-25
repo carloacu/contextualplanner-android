@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <contextualplanner/contextualplanner.hpp>
+#include <contextualplanner/util/replacevariables.hpp>
 #include "androidlog.hpp"
 #include "domain-jni.hpp"
 #include "problem-jni.hpp"
@@ -51,7 +52,7 @@ Java_com_contextualplanner_ContextualPlannerKt_replaceVariables(
             auto *problemPtr = idToProblemUnsafe(toId(env, problemObject));
             auto str = toString(env, jStr);
             if (problemPtr != nullptr) {
-                replaceVariables(str, *problemPtr);
+                cp::replaceVariables(str, problemPtr->variablesToValue());
             }
             return env->NewStringUTF(str.c_str());
         });
@@ -88,11 +89,11 @@ Java_com_contextualplanner_ContextualPlannerKt_lookForAnActionToDo(
             }
             return env->NewObject(actionAndGoalClass, actionAndGoalClassConstructor,
                                   env->NewStringUTF(""),
-                                  newJavaGoal(env, 0, cp::Goal("goal_name", true, -1, "")));
+                                  newJavaGoal(env, 0, cp::Goal("goal_name", -1, "")));
         });
     }, env->NewObject(actionAndGoalClass, actionAndGoalClassConstructor,
                       env->NewStringUTF(""),
-                      newJavaGoal(env, 0, cp::Goal("goal_name", true, -1, ""))
+                      newJavaGoal(env, 0, cp::Goal("goal_name", -1, ""))
                       ));
 }
 

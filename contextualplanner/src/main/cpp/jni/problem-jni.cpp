@@ -8,7 +8,7 @@
 #include "androidlog.hpp"
 #include "contextualplanner-jni.hpp"
 #include "jobjectsconversions.hpp"
-
+#include <contextualplanner/util/print.hpp>
 
 namespace {
     std::map<jint, cp::Problem> _idToRobotPlannerProblem;
@@ -104,7 +104,7 @@ Java_com_contextualplanner_Problem_setGoalPriority(
         auto goalStr = toString(env, jGoalStr);
         auto* problemPtr = idToProblemUnsafe(toId(env, object));
         if (problemPtr != nullptr)
-            problemPtr->setGoalPriority(goalStr, pPriority, pPushFrontOrBttomInCaseOfConflictWithAnotherGoal);
+            problemPtr->changeGoalPriority(goalStr, pPriority, pPushFrontOrBttomInCaseOfConflictWithAnotherGoal);
     });
 }
 
@@ -142,7 +142,7 @@ Java_com_contextualplanner_Problem_getGoals(
             jclass goalClass = env->FindClass("com/contextualplanner/Goal");
             jmethodID goalClassConstructor =
                     env->GetMethodID(goalClass, "<init>",
-                                     "(ILjava/lang/String;ZLjava/lang/String;ILjava/lang/String;)V");
+                                     "(ILjava/lang/String;Ljava/lang/String;ILjava/lang/String;)V");
 
             jobjectArray result;
             if (problemPtr != nullptr)
@@ -160,7 +160,7 @@ Java_com_contextualplanner_Problem_getGoals(
                 result = (jobjectArray)env->NewObjectArray(prioritiesToGoal.size(), goalClass,
                                                            env->NewObject(goalClass, goalClassConstructor,
                                                                           0, env->NewStringUTF(""),
-                                                                          true, env->NewStringUTF(""),
+                                                                          env->NewStringUTF(""),
                                                                           -1, env->NewStringUTF("")));
 
                 jsize arrayElt = 0;
@@ -288,7 +288,7 @@ Java_com_contextualplanner_Problem_printGoals(
             if (problemPtr != nullptr)
             {
                 auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-                return env->NewStringUTF(problemPtr->printGoals(goalNameMaxSize, now).c_str());
+                return env->NewStringUTF(cp::printGoals(goalNameMaxSize, *problemPtr, now).c_str());
             }
             return env->NewStringUTF("");
         });
