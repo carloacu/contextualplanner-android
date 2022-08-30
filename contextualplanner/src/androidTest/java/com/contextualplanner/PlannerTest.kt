@@ -98,12 +98,16 @@ class PlannerTest {
         val actions = mutableListOf<Action>()
         actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
         actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        actions.add(Action(informedAboutTheCompanyActionId, "", "", informedAboutTheCompanyFact, "", arrayOf()))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = 0))) // maxTimeToKeepInactive = 0 means not stackable
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
+        problem.addGoals(arrayOf(Goal(9, informedAboutTheCompanyFact))) // maxTimeToKeepInactive = 0 means not stackable
+        problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = 0))) // maxTimeToKeepInactive = 0 means not stackable
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
         problem.notifyActionDone(greetActionId, domain)
+        assertEquals(informedAboutTheCompanyActionId, lookForAnActionToDo(problem, domain).actionId)
+        problem.notifyActionDone(informedAboutTheCompanyActionId, domain)
         assertEquals("", lookForAnActionToDo(problem, domain).actionId)
     }
 
