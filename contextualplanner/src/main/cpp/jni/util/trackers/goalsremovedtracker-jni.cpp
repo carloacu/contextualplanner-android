@@ -98,6 +98,8 @@ JNIEXPORT void JNICALL
 Java_com_contextualplanner_util_trackers_GoalsRemovedTracker_disposeImplementation(
         JNIEnv *env, jobject object) {
     protectByMutex([&]() {
-        _idToGoalsRemovedCollector.erase(toId(env, object));
+        auto it = _idToGoalsRemovedCollector.find(toId(env, object));
+        if (it != _idToGoalsRemovedCollector.end())
+            _idToGoalsRemovedCollector.erase(it);
     });
 }

@@ -107,6 +107,8 @@ JNIEXPORT void JNICALL
 Java_com_contextualplanner_util_trackers_FactsAddedTracker_disposeImplementation(
         JNIEnv *env, jobject object) {
     protectByMutex([&]() {
-        _idToFactsAddedCollector.erase(toId(env, object));
+        auto it = _idToFactsAddedCollector.find(toId(env, object));
+        if (it != _idToFactsAddedCollector.end())
+            _idToFactsAddedCollector.erase(it);
     });
 }
