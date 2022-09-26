@@ -173,8 +173,10 @@ Java_com_contextualplanner_types_Problem_addFact(
     protectByMutex([&]() {
         auto fact = toString(env, jFact);
         auto* problemPtr = idToProblemUnsafe(toId(env, object));
-        if (problemPtr != nullptr)
-            problemPtr->addFact(fact);
+        if (problemPtr != nullptr) {
+            auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
+            problemPtr->addFact(fact, now);
+        }
     });
 }
 
@@ -201,8 +203,10 @@ Java_com_contextualplanner_types_Problem_removeFact(
     protectByMutex([&]() {
         auto fact = toString(env, jFact);
         auto* problemPtr = idToProblemUnsafe(toId(env, object));
-        if (problemPtr != nullptr)
-            problemPtr->removeFact(fact);
+        if (problemPtr != nullptr) {
+            auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
+            problemPtr->removeFact(fact, now);
+        }
     });
 }
 
@@ -215,8 +219,10 @@ Java_com_contextualplanner_types_Problem_modifyFacts(
         static const char sep = ',';
         auto facts = cp::SetOfFacts::fromStr(toString(env, jFacts), sep);
         auto* problemPtr = idToProblemUnsafe(toId(env, object));
-        if (problemPtr != nullptr)
-            problemPtr->modifyFacts(facts);
+        if (problemPtr != nullptr) {
+            auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
+            problemPtr->modifyFacts(facts, now);
+        }
     });
 }
 

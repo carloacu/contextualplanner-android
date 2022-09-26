@@ -77,6 +77,20 @@ class PlannerTest {
     }
 
     @Test
+    fun goalStackableWithCondition() {
+        val actions = mutableListOf<Action>()
+        actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
+        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        val domain = Domain(actions.toTypedArray())
+        val problem = Problem()
+        problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = -1))) // maxTimeToKeepInactive = -1 means stackable
+        problem.addGoals(arrayOf(Goal(10, "persist(imply(" + checkedInFact + ", " + greetedFact + "))")))
+        assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
+        problem.notifyActionDone(checkInActionId, domain)
+        assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
+    }
+
+    @Test
     fun removeAGoal() {
         val actions = mutableListOf<Action>()
         actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
