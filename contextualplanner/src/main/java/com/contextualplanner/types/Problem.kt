@@ -116,6 +116,13 @@ class Problem : DisposableWithId(newProblem()) {
     external fun removeInference(inferenceId: String)
 
     /**
+     * @brief Are the facts contained in the problem.
+     * @param[in] pSetOfFacts Facts to check.
+     * @return True if all the fact are contained in the problem, false otherwise.
+     */
+    external fun areFactsTrue(setOfFacts: String): Boolean
+
+    /**
      * @brief What should be done to release this object.<br/>
      * /!\ You should never call this function but dispose() instead to release this object.
      */

@@ -305,6 +305,23 @@ Java_com_contextualplanner_types_Problem_removeInference(
     });
 }
 
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_contextualplanner_types_Problem_areFactsTrue(
+        JNIEnv *env, jobject object, jstring jsetOfFactsStr) {
+    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jboolean>(env, [&]() {
+        return protectByMutexWithReturn<jboolean>([&]() {
+            auto* problemPtr = idToProblemUnsafe(toId(env, object));
+            if (problemPtr != nullptr)
+            {
+                auto setOfFactsStr = toString(env, jsetOfFactsStr);
+                return problemPtr->areFactsTrue(cp::SetOfFacts::fromStr(setOfFactsStr, '&'));
+            }
+        });
+    }, false);
+}
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_contextualplanner_types_Problem_disposeImplementation(
