@@ -33,6 +33,7 @@ if (ANDROID)
 
           "jni/util/trackers/factsaddedtracker-jni.cpp"
           "jni/util/trackers/goalsremovedtracker-jni.cpp"
+          "jni/util/fact-jni.cpp"
           "jni/util/print-jni.cpp"
           "jni/util/replacevariables-jni.cpp"
           "jni/jobjectsconversions.hpp"

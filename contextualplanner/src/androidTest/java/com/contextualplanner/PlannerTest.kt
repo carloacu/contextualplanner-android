@@ -4,9 +4,11 @@ import com.contextualplanner.types.Action
 import com.contextualplanner.types.Domain
 import com.contextualplanner.types.Goal
 import com.contextualplanner.types.Problem
+import com.contextualplanner.types.Inference
 import org.junit.Assert.*
 import org.junit.Test
 import java.lang.Thread.sleep
+import com.contextualplanner.util.*
 import com.contextualplanner.util.trackers.*
 
 class PlannerTest {
@@ -14,10 +16,13 @@ class PlannerTest {
     private val greetActionId = "greet-action"
     private val checkInActionId = "checkIn-action"
     private val informedAboutTheCompanyActionId = "informedAboutTheCompany-action"
+    private val actionId1 = "action-1"
 
     private val greetedFact = "greeted"
     private val checkedInFact = "checkedIn"
     private val informedAboutTheCompanyFact = "informedAboutTheCompany"
+    private val factA = "factA"
+    private val factB = "factB"
 
     @Test
     fun directLinkFromGoalToEffect() {
@@ -349,5 +354,24 @@ class PlannerTest {
         assertEquals(goalStr, goals[0].fact)
     }
 
+
+    @Test
+    fun checkInference() {
+        val punctalFactToto = getPunctualFactPrefix() + "toto"
+        val problem = Problem()
+        problem.addGoals(arrayOf(Goal(9, "persist($factA)")))
+
+        val actions = mutableListOf<Action>()
+        actions.add(Action(actionId1, "", factB, punctalFactToto, "", arrayOf()))
+        problem.addFact(factB)
+
+        val domain = Domain(actions.toTypedArray())
+        assertEquals("", lookForAnActionToDo(problem, domain).actionId)
+        val inference1Id = "inference1"
+        problem.addInference(Inference(inference1Id, punctalFactToto, factA))
+        assertEquals(actionId1, lookForAnActionToDo(problem, domain).actionId)
+        problem.removeInference(inference1Id)
+        assertEquals("", lookForAnActionToDo(problem, domain).actionId)
+    }
 
 }

@@ -104,6 +104,18 @@ class Problem : DisposableWithId(newProblem()) {
     external fun addVariableToValue(variableName: String, variableValue: String)
 
     /**
+     * @brief Add an inference.
+     * @param inference Inference to add.
+     */
+    external fun addInference(inference: Inference)
+
+    /**
+     * @brief Remove an inference.
+     * @param inferenceId Identifier of the inference to remove.
+     */
+    external fun removeInference(inferenceId: String)
+
+    /**
      * @brief What should be done to release this object.<br/>
      * /!\ You should never call this function but dispose() instead to release this object.
      */

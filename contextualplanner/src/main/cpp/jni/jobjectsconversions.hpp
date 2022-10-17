@@ -52,6 +52,8 @@ jint toId(JNIEnv *env, jobject object);
 
 PlannerAction toPlannerAction(JNIEnv *env, jobject action);
 
+cp::Inference toInference(JNIEnv *env, jobject jinference, std::string& inferenceId);
+
 cp::Goal toGoal(JNIEnv *env, jobject goal, int* pPriority);
 
 jobject newJavaGoal(JNIEnv *env, int pPriority, const cp::Goal& pGoal);

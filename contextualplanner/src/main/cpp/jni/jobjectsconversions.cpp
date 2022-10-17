@@ -66,8 +66,8 @@ PlannerAction toPlannerAction(JNIEnv *env, jobject action)
     jclass actionClass = env->FindClass("com/contextualplanner/types/Action");
     PlannerAction res;
     res.id = _getStringFromMethod(env, actionClass, action, "getId");
-    static const char sep = ',';
-    res.preferInContext = cp::SetOfFacts::fromStr(_getStringFromMethod(env, actionClass, action, "getPreferInContext"), sep);
+    res.preferInContext = cp::SetOfFacts::fromStr(_getStringFromMethod(env, actionClass, action, "getPreferInContext"), ',');
+    static const char sep = '&';
     res.precondition = cp::SetOfFacts::fromStr(_getStringFromMethod(env, actionClass, action, "getPrecondition"), sep);
     res.effect = cp::SetOfFacts::fromStr(_getStringFromMethod(env, actionClass, action, "getEffect"), sep);
     res.potentialEffect = cp::SetOfFacts::fromStr(_getStringFromMethod(env, actionClass, action, "getPotentialEffect"), sep);
@@ -75,6 +75,15 @@ PlannerAction toPlannerAction(JNIEnv *env, jobject action)
     return res;
 }
 
+cp::Inference toInference(JNIEnv *env, jobject jinference, std::string& inferenceId)
+{
+    jclass inferenceClass = env->FindClass("com/contextualplanner/types/Inference");
+    inferenceId = _getStringFromMethod(env, inferenceClass, jinference, "getId");
+    static const char sep = '&';
+    return {cp::SetOfFacts::fromStr(_getStringFromMethod(env, inferenceClass, jinference, "getCondition"), sep),
+                         cp::SetOfFacts::fromStr(_getStringFromMethod(env, inferenceClass, jinference, "getFactsToModify"), sep),
+                         _getGoalArrayFromMethod(env, inferenceClass, jinference, "getGoalsToAdd")};
+}
 
 cp::Goal toGoal(JNIEnv *env, jobject goal, int* pPriority)
 {
@@ -95,8 +104,8 @@ jobject newJavaGoal(JNIEnv *env, int pPriority, const cp::Goal& pGoal)
     jmethodID goalClassConstructor =
             env->GetMethodID(goalClass, "<init>",
                              "(ILjava/lang/String;Ljava/lang/String;ILjava/lang/String;)V");
-    std::string condition = pGoal.conditionFactPtr() != nullptr ?
-                            pGoal.conditionFactPtr()->toStr() : "";
+    std::string condition = pGoal.conditionFactOptionalPtr() != nullptr ?
+                            pGoal.conditionFactOptionalPtr()->toStr() : "";
     return env->NewObject(goalClass, goalClassConstructor,
                           pPriority,
                           env->NewStringUTF(pGoal.toStr().c_str()),

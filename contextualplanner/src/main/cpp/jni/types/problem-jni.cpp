@@ -112,7 +112,10 @@ Java_com_contextualplanner_types_Problem_setGoalPriority(
         auto goalStr = toString(env, jGoalStr);
         auto* problemPtr = idToProblemUnsafe(toId(env, object));
         if (problemPtr != nullptr)
-            problemPtr->changeGoalPriority(goalStr, pPriority, pPushFrontOrBottomInCaseOfConflictWithAnotherGoal);
+        {
+            auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
+            problemPtr->changeGoalPriority(goalStr, pPriority, pPushFrontOrBottomInCaseOfConflictWithAnotherGoal, now);
+        }
     });
 }
 
@@ -216,7 +219,7 @@ JNIEXPORT void JNICALL
 Java_com_contextualplanner_types_Problem_modifyFacts(
         JNIEnv *env, jobject object, jstring jFacts) {
     protectByMutex([&]() {
-        static const char sep = ',';
+        static const char sep = '&';
         auto facts = cp::SetOfFacts::fromStr(toString(env, jFacts), sep);
         auto* problemPtr = idToProblemUnsafe(toId(env, object));
         if (problemPtr != nullptr) {
@@ -267,6 +270,40 @@ Java_com_contextualplanner_types_Problem_addVariableToValue(
     });
 }
 
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_contextualplanner_types_Problem_addInference(
+        JNIEnv *env, jobject object, jobject jinference) {
+    convertCppExceptionsToJavaExceptions(env, [&]() {
+        protectByMutex([&]() {
+            auto* problemPtr = idToProblemUnsafe(toId(env, object));
+            if (problemPtr != nullptr)
+            {
+                std::string inferenceId;
+                auto inference = toInference(env, jinference, inferenceId);
+                problemPtr->addInference(inferenceId, inference);
+            }
+        });
+    });
+}
+
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_contextualplanner_types_Problem_removeInference(
+        JNIEnv *env, jobject object, jstring jinferenceId) {
+    convertCppExceptionsToJavaExceptions(env, [&]() {
+        protectByMutex([&]() {
+            auto* problemPtr = idToProblemUnsafe(toId(env, object));
+            if (problemPtr != nullptr)
+            {
+                auto inferenceId = toString(env, jinferenceId);
+                problemPtr->removeInference(inferenceId);
+            }
+        });
+    });
+}
 
 extern "C"
 JNIEXPORT void JNICALL
