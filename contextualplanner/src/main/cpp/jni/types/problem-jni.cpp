@@ -1,17 +1,76 @@
+#include <sstream>
 #include "../androidlog.hpp"
 #include "../contextualplanner-jni.hpp"
 #include "../jobjectsconversions.hpp"
 #include "domain-jni.hpp"
+#include "setofinferences-jni.hpp"
 #include <contextualplanner/util/print.hpp>
 
 namespace {
-    std::map<jint, cp::Problem> _idToRobotPlannerProblem;
+    class RobotPlannerProblem {
+    public:
+        RobotPlannerProblem()
+                : problem(),
+                  punctualFacts(),
+                  factsAdded(),
+                  punctualFactsConnection(),
+                  factsAddedConnection(),
+                  factsRemovedConnection()
+        {
+        }
+
+        ~RobotPlannerProblem() {
+            try {
+                punctualFactsConnection.disconnect();
+            } catch (... ) {}
+            try {
+                factsAddedConnection.disconnect();
+            } catch (... ) {}
+            try {
+                factsRemovedConnection.disconnect();
+            } catch (... ) {}
+        }
+
+        cp::Problem problem;
+        std::set<cp::Fact> punctualFacts;
+        std::set<cp::Fact> factsAdded;
+        cpstd::observable::Connection punctualFactsConnection;
+        cpstd::observable::Connection factsAddedConnection;
+        cpstd::observable::Connection factsRemovedConnection;
+    };
+    std::map<jint, RobotPlannerProblem> _idToRobotPlannerProblem;
+
+    RobotPlannerProblem* _idToPlannerProblemUnsafe(jint id) {
+        auto it = _idToRobotPlannerProblem.find(id);
+        if (it != _idToRobotPlannerProblem.end())
+            return &it->second;
+        return nullptr;
+    }
+
+    jobjectArray _flushFacts(
+            JNIEnv *env,
+            std::set<cp::Fact>& pFacts) {
+        jclass stringClass = env->FindClass("java/lang/String");
+        jobjectArray result;
+        result = (jobjectArray)env->NewObjectArray(pFacts.size(), stringClass,
+                                                   env->NewStringUTF(""));
+
+        jsize arrayElt = 0;
+        for (const auto& currFactAdded : pFacts) {
+            env->SetObjectArrayElement(result, arrayElt++,
+                                       env->NewStringUTF(currFactAdded.toStr().c_str()));
+        }
+
+        pFacts.clear();
+        return result;
+    }
 }
 
-cp::Problem* idToProblemUnsafe(jint id) {
+cp::Problem* idToProblemUnsafe(jint id)
+{
     auto it = _idToRobotPlannerProblem.find(id);
     if (it != _idToRobotPlannerProblem.end())
-        return &it->second;
+        return &it->second.problem;
     return nullptr;
 }
 
@@ -22,9 +81,19 @@ Java_com_contextualplanner_types_Problem_00024Companion_newProblem(
         JNIEnv *env, jobject /*object*/) {
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jint>(env, [&]() {
         return protectByMutexWithReturn<jint>([&]() {
-            jint newLocalMemory = findMissingKey(_idToRobotPlannerProblem);
-            _idToRobotPlannerProblem[newLocalMemory];
-            return newLocalMemory;
+            jint newObjectId = findMissingKey(_idToRobotPlannerProblem);
+            auto& robotPlannerProblem = _idToRobotPlannerProblem[newObjectId];
+            robotPlannerProblem.punctualFactsConnection = robotPlannerProblem.problem.onPunctualFacts.connectUnsafe([&](const std::set<cp::Fact>& pFacts) {
+                robotPlannerProblem.punctualFacts.insert(pFacts.begin(), pFacts.end());
+            });
+            robotPlannerProblem.factsAddedConnection = robotPlannerProblem.problem.onFactsAdded.connectUnsafe([&](const std::set<cp::Fact>& pFacts) {
+                robotPlannerProblem.factsAdded.insert(pFacts.begin(), pFacts.end());
+            });
+            robotPlannerProblem.factsRemovedConnection = robotPlannerProblem.problem.onFactsRemoved.connectUnsafe([&](const std::set<cp::Fact>& pFacts) {
+                for (auto& currFact : pFacts)
+                    robotPlannerProblem.factsAdded.erase(currFact);
+            });
+            return newObjectId;
         });
     }, -1);
 }
@@ -37,15 +106,15 @@ Java_com_contextualplanner_types_Problem_notifyActionDone(
     convertCppExceptionsToJavaExceptions(env, [&]() {
         return protectByMutex([&]() {
             auto *domainPtr = idToDomainUnsafe(toId(env, domainObject));
-            auto *problemPtr = idToProblemUnsafe(toId(env, object));
-            if (domainPtr != nullptr && problemPtr != nullptr) {
+            auto *plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+            if (domainPtr != nullptr && plannerProblemPtr != nullptr) {
                 auto actionId = toString(env, jActionId);
                 auto itAction = domainPtr->idToPlannerActions.find(actionId);
                 if (itAction != domainPtr->idToPlannerActions.end())
                 {
                     std::map<std::string, std::string> parameters;
                     auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-                    problemPtr->notifyActionDone(actionId, parameters, itAction->second.effect, now, &itAction->second.goalsToAdd);
+                    plannerProblemPtr->problem.notifyActionDone(actionId, parameters, itAction->second.effect, now, &itAction->second.goalsToAdd);
                 }
             }
         });
@@ -60,11 +129,11 @@ Java_com_contextualplanner_types_Problem_pushFrontGoal(
     protectByMutex([&]() {
         int priority = 10;
         auto goal = toGoal(env, jGoal, &priority);
-        auto* problemPtr = idToProblemUnsafe(toId(env, object));
-        if (problemPtr != nullptr)
+        auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+        if (plannerProblemPtr != nullptr)
         {
             auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-            problemPtr->pushFrontGoal(goal, now, priority);
+            plannerProblemPtr->problem.pushFrontGoal(goal, now, priority);
         }
     });
 }
@@ -76,11 +145,11 @@ Java_com_contextualplanner_types_Problem_pushBackGoal(
     protectByMutex([&]() {
         int priority = 10;
         auto goal = toGoal(env, jGoal, &priority);
-        auto* problemPtr = idToProblemUnsafe(toId(env, object));
-        if (problemPtr != nullptr)
+        auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+        if (plannerProblemPtr != nullptr)
         {
             auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-            problemPtr->pushBackGoal(goal, now, priority);
+            plannerProblemPtr->problem.pushBackGoal(goal, now, priority);
         }
     });
 }
@@ -92,11 +161,11 @@ Java_com_contextualplanner_types_Problem_removeGoals(
         JNIEnv *env, jobject object, jstring jGoalGroupStr) {
     protectByMutex([&]() {
         auto goalGroupStr = toString(env, jGoalGroupStr);
-        auto* problemPtr = idToProblemUnsafe(toId(env, object));
-        if (problemPtr != nullptr)
+        auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+        if (plannerProblemPtr != nullptr)
         {
             auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-            problemPtr->removeGoals(goalGroupStr, now);
+            plannerProblemPtr->problem.removeGoals(goalGroupStr, now);
         }
     });
 }
@@ -110,11 +179,11 @@ Java_com_contextualplanner_types_Problem_setGoalPriority(
         jboolean pPushFrontOrBottomInCaseOfConflictWithAnotherGoal) {
     protectByMutex([&]() {
         auto goalStr = toString(env, jGoalStr);
-        auto* problemPtr = idToProblemUnsafe(toId(env, object));
-        if (problemPtr != nullptr)
+        auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+        if (plannerProblemPtr != nullptr)
         {
             auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-            problemPtr->changeGoalPriority(goalStr, pPriority, pPushFrontOrBottomInCaseOfConflictWithAnotherGoal, now);
+            plannerProblemPtr->problem.changeGoalPriority(goalStr, pPriority, pPushFrontOrBottomInCaseOfConflictWithAnotherGoal, now);
         }
     });
 }
@@ -126,16 +195,16 @@ Java_com_contextualplanner_types_Problem_getGoals(
         JNIEnv *env, jobject object) {
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jobjectArray>(env, [&]() {
         return protectByMutexWithReturn<jobjectArray>([&]() {
-            auto* problemPtr = idToProblemUnsafe(toId(env, object));
+            auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
             jclass goalClass = env->FindClass("com/contextualplanner/types/Goal");
             jmethodID goalClassConstructor =
                     env->GetMethodID(goalClass, "<init>",
                                      "(ILjava/lang/String;Ljava/lang/String;ILjava/lang/String;)V");
 
             jobjectArray result;
-            if (problemPtr != nullptr)
+            if (plannerProblemPtr != nullptr)
             {
-                auto& goals = problemPtr->goals();
+                auto& goals = plannerProblemPtr->problem.goals();
 
                 std::vector<std::pair<int, cp::Goal>> prioritiesToGoal;
                 for (auto itGoalsGroup = goals.end(); itGoalsGroup != goals.begin(); )
@@ -175,10 +244,10 @@ Java_com_contextualplanner_types_Problem_addFact(
         JNIEnv *env, jobject object, jstring jFact) {
     protectByMutex([&]() {
         auto fact = toString(env, jFact);
-        auto* problemPtr = idToProblemUnsafe(toId(env, object));
-        if (problemPtr != nullptr) {
+        auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+        if (plannerProblemPtr != nullptr) {
             auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-            problemPtr->addFact(fact, now);
+            plannerProblemPtr->problem.addFact(fact, now);
         }
     });
 }
@@ -190,9 +259,9 @@ Java_com_contextualplanner_types_Problem_hasFact(
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jboolean>(env, [&]() {
         return protectByMutexWithReturn<jboolean>([&]() {
             auto fact = toString(env, jFact);
-            auto* problemPtr = idToProblemUnsafe(toId(env, object));
-            if (problemPtr != nullptr)
-                return problemPtr->hasFact(fact);
+            auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+            if (plannerProblemPtr != nullptr)
+                return plannerProblemPtr->problem.hasFact(fact);
             return false;
         });
     }, false);
@@ -205,10 +274,10 @@ Java_com_contextualplanner_types_Problem_removeFact(
         JNIEnv *env, jobject object, jstring jFact) {
     protectByMutex([&]() {
         auto fact = toString(env, jFact);
-        auto* problemPtr = idToProblemUnsafe(toId(env, object));
-        if (problemPtr != nullptr) {
+        auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+        if (plannerProblemPtr != nullptr) {
             auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-            problemPtr->removeFact(fact, now);
+            plannerProblemPtr->problem.removeFact(fact, now);
         }
     });
 }
@@ -221,10 +290,10 @@ Java_com_contextualplanner_types_Problem_modifyFacts(
     protectByMutex([&]() {
         static const char sep = '&';
         auto facts = cp::SetOfFacts::fromStr(toString(env, jFacts), sep);
-        auto* problemPtr = idToProblemUnsafe(toId(env, object));
-        if (problemPtr != nullptr) {
+        auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+        if (plannerProblemPtr != nullptr) {
             auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-            problemPtr->modifyFacts(facts, now);
+            plannerProblemPtr->problem.modifyFacts(facts, now);
         }
     });
 }
@@ -234,11 +303,11 @@ JNIEXPORT void JNICALL
 Java_com_contextualplanner_types_Problem_addGoals(
         JNIEnv *env, jobject object, jobjectArray jGoals) {
     protectByMutex([&]() {
-        auto* problemPtr = idToProblemUnsafe(toId(env, object));
-        if (problemPtr != nullptr)
+        auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+        if (plannerProblemPtr != nullptr)
         {
             auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-            problemPtr->addGoals(toGoals(env, jGoals), now);
+            plannerProblemPtr->problem.addGoals(toGoals(env, jGoals), now);
         }
     });
 }
@@ -248,9 +317,9 @@ JNIEXPORT void JNICALL
 Java_com_contextualplanner_types_Problem_removeFirstGoalsThatAreAlreadySatisfied(
         JNIEnv *env, jobject object) {
     protectByMutex([&]() {
-        auto* problemPtr = idToProblemUnsafe(toId(env, object));
-        if (problemPtr != nullptr)
-            problemPtr->removeFirstGoalsThatAreAlreadySatisfied();
+        auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+        if (plannerProblemPtr != nullptr)
+            plannerProblemPtr->problem.removeFirstGoalsThatAreAlreadySatisfied();
     });
 }
 
@@ -264,25 +333,27 @@ Java_com_contextualplanner_types_Problem_addVariableToValue(
         auto variableValue = toString(env, jVariableValue);
         std::map<std::string, std::string> variablesToValue;
         variablesToValue.emplace(variableName, variableValue);
-        auto* problemPtr = idToProblemUnsafe(toId(env, object));
-        if (problemPtr != nullptr)
-            problemPtr->addVariablesToValue(variablesToValue);
+        auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+        if (plannerProblemPtr != nullptr)
+            plannerProblemPtr->problem.addVariablesToValue(variablesToValue);
     });
 }
 
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_types_Problem_addInference(
-        JNIEnv *env, jobject object, jobject jinference) {
+Java_com_contextualplanner_types_Problem_addSetOfInferences(
+        JNIEnv *env, jobject object, jobject jsetOfInferences) {
     convertCppExceptionsToJavaExceptions(env, [&]() {
         protectByMutex([&]() {
-            auto* problemPtr = idToProblemUnsafe(toId(env, object));
-            if (problemPtr != nullptr)
+            auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+            auto setOfInferencesId = toId(env, jsetOfInferences);
+            auto setOfInferencesPtr = idToSetOfInferencesUnsafe(setOfInferencesId);
+            if (plannerProblemPtr != nullptr && setOfInferencesPtr)
             {
-                std::string inferenceId;
-                auto inference = toInference(env, jinference, inferenceId);
-                problemPtr->addInference(inferenceId, inference);
+                std::stringstream setOfInferencesIdSS;
+                setOfInferencesIdSS << setOfInferencesId;
+                plannerProblemPtr->problem.addSetOfInferences(setOfInferencesIdSS.str(), setOfInferencesPtr);
             }
         });
     });
@@ -291,20 +362,22 @@ Java_com_contextualplanner_types_Problem_addInference(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_contextualplanner_types_Problem_removeInference(
-        JNIEnv *env, jobject object, jstring jinferenceId) {
+Java_com_contextualplanner_types_Problem_removeSetOfInferences(
+        JNIEnv *env, jobject object, jobject jsetOfInferences) {
     convertCppExceptionsToJavaExceptions(env, [&]() {
         protectByMutex([&]() {
-            auto* problemPtr = idToProblemUnsafe(toId(env, object));
-            if (problemPtr != nullptr)
+            auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+            auto setOfInferencesId = toId(env, jsetOfInferences);
+            auto setOfInferencesPtr = idToSetOfInferencesUnsafe(setOfInferencesId);
+            if (plannerProblemPtr != nullptr && setOfInferencesPtr)
             {
-                auto inferenceId = toString(env, jinferenceId);
-                problemPtr->removeInference(inferenceId);
+                std::stringstream setOfInferencesIdSS;
+                setOfInferencesIdSS << setOfInferencesId;
+                plannerProblemPtr->problem.removeSetOfInferences(setOfInferencesIdSS.str());
             }
         });
     });
 }
-
 
 extern "C"
 JNIEXPORT jboolean JNICALL
@@ -312,14 +385,48 @@ Java_com_contextualplanner_types_Problem_areFactsTrue(
         JNIEnv *env, jobject object, jstring jsetOfFactsStr) {
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jboolean>(env, [&]() {
         return protectByMutexWithReturn<jboolean>([&]() {
-            auto* problemPtr = idToProblemUnsafe(toId(env, object));
-            if (problemPtr != nullptr)
+            auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+            if (plannerProblemPtr != nullptr)
             {
                 auto setOfFactsStr = toString(env, jsetOfFactsStr);
-                return problemPtr->areFactsTrue(cp::SetOfFacts::fromStr(setOfFactsStr, '&'));
+                return plannerProblemPtr->problem.areFactsTrue(cp::SetOfFacts::fromStr(setOfFactsStr, '&'));
             }
         });
     }, false);
+}
+
+
+extern "C"
+JNIEXPORT jobjectArray JNICALL
+Java_com_contextualplanner_types_Problem_flushPunctualFacts(
+        JNIEnv *env, jobject object) {
+    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jobjectArray>(env, [&]() {
+        return protectByMutexWithReturn<jobjectArray>([&]() {
+            auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+            if (plannerProblemPtr != nullptr) {
+                return _flushFacts(env, plannerProblemPtr->punctualFacts);
+            }
+            jclass stringClass = env->FindClass("java/lang/String");
+            return (jobjectArray)env->NewObjectArray(0, stringClass,env->NewStringUTF(""));
+        });
+    }, nullptr);
+}
+
+
+extern "C"
+JNIEXPORT jobjectArray JNICALL
+Java_com_contextualplanner_types_Problem_flushFactsAdded(
+        JNIEnv *env, jobject object) {
+    return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jobjectArray>(env, [&]() {
+        return protectByMutexWithReturn<jobjectArray>([&]() {
+            auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
+            if (plannerProblemPtr != nullptr) {
+                return _flushFacts(env, plannerProblemPtr->factsAdded);
+            }
+            jclass stringClass = env->FindClass("java/lang/String");
+            return (jobjectArray)env->NewObjectArray(0, stringClass,env->NewStringUTF(""));
+        });
+    }, nullptr);
 }
 
 extern "C"
@@ -327,6 +434,8 @@ JNIEXPORT void JNICALL
 Java_com_contextualplanner_types_Problem_disposeImplementation(
         JNIEnv *env, jobject object) {
     protectByMutex([&]() {
-        _idToRobotPlannerProblem.erase(toId(env, object));
+        auto it = _idToRobotPlannerProblem.find(toId(env, object));
+        if (it != _idToRobotPlannerProblem.end())
+            _idToRobotPlannerProblem.erase(it);
     });
 }

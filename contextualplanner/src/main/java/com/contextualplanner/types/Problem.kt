@@ -104,23 +104,36 @@ class Problem : DisposableWithId(newProblem()) {
     external fun addVariableToValue(variableName: String, variableValue: String)
 
     /**
-     * @brief Add an inference.
-     * @param inference Inference to add.
-     */
-    external fun addInference(inference: Inference)
-
-    /**
-     * @brief Remove an inference.
-     * @param inferenceId Identifier of the inference to remove.
-     */
-    external fun removeInference(inferenceId: String)
-
-    /**
      * @brief Are the facts contained in the problem.
      * @param[in] pSetOfFacts Facts to check.
      * @return True if all the fact are contained in the problem, false otherwise.
      */
     external fun areFactsTrue(setOfFacts: String): Boolean
+
+    /**
+     * @brief Add a set of inferences.
+     * @param setOfInferences Set of inferences to add.
+     */
+    external fun addSetOfInferences(setOfInferences: SetOfInferences)
+
+    /**
+     * @brief Remove a set of inferences.
+     * @param setOfInferences Set of inferences to remove.
+     */
+    external fun removeSetOfInferences(setOfInferences: SetOfInferences)
+
+    /**
+     * @brief Flush the cache of punctual facts.
+     * @return Punctual facts raised since the last flush.
+     */
+    external fun flushPunctualFacts(): Array<String>
+
+    /**
+     * @brief Flush the cache of facts added.
+     * @return Facts added since the last flush.<br/>
+     * If a fact was added then removed it will not be present here.
+     */
+    external fun flushFactsAdded(): Array<String>
 
     /**
      * @brief What should be done to release this object.<br/>

@@ -1,10 +1,6 @@
 package com.contextualplanner
 
-import com.contextualplanner.types.Action
-import com.contextualplanner.types.Domain
-import com.contextualplanner.types.Goal
-import com.contextualplanner.types.Problem
-import com.contextualplanner.types.Inference
+import com.contextualplanner.types.*
 import org.junit.Assert.*
 import org.junit.Test
 import java.lang.Thread.sleep
@@ -289,57 +285,48 @@ class PlannerTest {
 
 
     @Test
-    fun factsAddedTracker() {
+    fun factsAddedCache() {
         val actions = mutableListOf<Action>()
         actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
-        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        val punctualFact1 = getPunctualFactPrefix() + "fact1"
+        actions.add(Action(checkInActionId, "", "", "$checkedInFact & $punctualFact1", "", arrayOf()))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
-        val factsAddedTracker = FactsAddedTracker(problem)
-        val factsAddedTracker2 = FactsAddedTracker(problem)
         problem.addFact(informedAboutTheCompanyFact)
-        val factsAddedTracker3 = FactsAddedTracker(problem)
         problem.addGoals(arrayOf(Goal(9, checkedInFact)))
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
 
-        var factsAdded = factsAddedTracker.flushFactsAdded()
+        var punctualFacts = problem.flushPunctualFacts()
+        var factsAdded = problem.flushFactsAdded()
         assertEquals(1, factsAdded.size)
         assertEquals(informedAboutTheCompanyFact, factsAdded[0])
+
+        assertEquals(0, punctualFacts.size)
 
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain).actionId)
         problem.notifyActionDone(greetActionId, domain)
 
-        factsAdded = factsAddedTracker.flushFactsAdded()
+        factsAdded = problem.flushFactsAdded()
         assertEquals(1, factsAdded.size)
         assertEquals(greetedFact, factsAdded[0])
 
         assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
         problem.notifyActionDone(checkInActionId, domain)
 
-        factsAdded = factsAddedTracker.flushFactsAdded()
+        punctualFacts = problem.flushPunctualFacts()
+        assertEquals(1, punctualFacts.size)
+        assertEquals(punctualFact1, punctualFacts[0])
+
+        factsAdded = problem.flushFactsAdded()
         assertEquals(1, factsAdded.size)
         assertEquals(checkedInFact, factsAdded[0])
 
-        assertEquals(0, factsAddedTracker.flushFactsAdded().size)
+        assertEquals(0, problem.flushPunctualFacts().size)
+        assertEquals(0, problem.flushFactsAdded().size)
         assertEquals("", lookForAnActionToDo(problem, domain).actionId)
 
-        assertEquals(0, factsAddedTracker.flushFactsAdded().size)
-
-        factsAdded = factsAddedTracker2.flushFactsAdded()
-        assertEquals(3, factsAdded.size)
-        assertEquals(checkedInFact, factsAdded[0])
-        assertEquals(greetedFact, factsAdded[1])
-        assertEquals(informedAboutTheCompanyFact, factsAdded[2])
-
-        problem.removeFact(checkedInFact)
-
-        factsAdded = factsAddedTracker3.flushFactsAdded()
-        assertEquals(1, factsAdded.size)
-        assertEquals(greetedFact, factsAdded[0])
-
-        factsAddedTracker3.dispose()
-        factsAddedTracker2.dispose()
-        factsAddedTracker.dispose()
+        assertEquals(0, problem.flushPunctualFacts().size)
+        assertEquals(0, problem.flushFactsAdded().size)
     }
 
 
@@ -357,21 +344,37 @@ class PlannerTest {
 
     @Test
     fun checkInference() {
-        val punctalFactToto = getPunctualFactPrefix() + "toto"
+        val punctualFactToto = getPunctualFactPrefix() + "toto"
         val problem = Problem()
+        val setOfInferences = SetOfInferences()
+        problem.addSetOfInferences(setOfInferences)
         problem.addGoals(arrayOf(Goal(9, "persist($factA)")))
 
         val actions = mutableListOf<Action>()
-        actions.add(Action(actionId1, "", factB, punctalFactToto, "", arrayOf()))
+        actions.add(Action(actionId1, "", factB, punctualFactToto, "", arrayOf()))
         problem.addFact(factB)
 
         val domain = Domain(actions.toTypedArray())
         assertEquals("", lookForAnActionToDo(problem, domain).actionId)
         val inference1Id = "inference1"
-        problem.addInference(Inference(inference1Id, punctalFactToto, factA))
+        setOfInferences.addInference(Inference(inference1Id, punctualFactToto, factA))
         assertEquals(actionId1, lookForAnActionToDo(problem, domain).actionId)
-        problem.removeInference(inference1Id)
+        setOfInferences.removeInference(inference1Id)
         assertEquals("", lookForAnActionToDo(problem, domain).actionId)
     }
 
+
+    @Test
+    fun changePunctualPrefixName() {
+        val newPunctualPrefix = "~NewPunctualPrefixName~"
+        setPunctualFactPrefix(newPunctualPrefix)
+        assertEquals(newPunctualPrefix, getPunctualFactPrefix())
+        val problem = Problem()
+        val punctualFactToto = newPunctualPrefix + "toto"
+        problem.addFact(punctualFactToto)
+        assertFalse(problem.hasFact(punctualFactToto))
+        val notPunctualFactToto = "totoFact"
+        problem.addFact(notPunctualFactToto)
+        assertTrue(problem.hasFact(notPunctualFactToto))
+    }
 }

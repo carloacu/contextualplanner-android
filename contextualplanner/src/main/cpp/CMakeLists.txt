@@ -31,7 +31,6 @@ if (ANDROID)
           # Provides a relative path to your source file(s).
           "jni/androidlog.hpp"
 
-          "jni/util/trackers/factsaddedtracker-jni.cpp"
           "jni/util/trackers/goalsremovedtracker-jni.cpp"
           "jni/util/fact-jni.cpp"
           "jni/util/print-jni.cpp"
@@ -44,6 +43,7 @@ if (ANDROID)
           "jni/types/domain-jni.cpp"
           "jni/types/problem-jni.hpp"
           "jni/types/problem-jni.cpp"
+          "jni/types/setofinferences-jni.cpp"
     )
 
     if (COUT_TO_ANDROID_LOG)
