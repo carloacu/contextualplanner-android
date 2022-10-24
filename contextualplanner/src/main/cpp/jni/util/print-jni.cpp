@@ -16,7 +16,7 @@ Java_com_contextualplanner_util_PrintKt_printGoals(
             if (problemPtr != nullptr)
             {
                 auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-                return env->NewStringUTF(cp::printGoals(goalNameMaxSize, *problemPtr, now).c_str());
+                return env->NewStringUTF(cp::printGoalsTable(goalNameMaxSize, problemPtr->goals(), now).c_str());
             }
             return env->NewStringUTF("");
         });

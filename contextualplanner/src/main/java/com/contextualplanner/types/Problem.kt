@@ -62,6 +62,13 @@ class Problem : DisposableWithId(newProblem()) {
     external fun getGoals(): Array<Goal>?
 
     /**
+     * @brief Get the not satisfied goals.<br/>
+     * A goal is not satisfied if the condition is true (if it exist) and if the value of the goal is not true.
+     * @return Map of priority to not satisfied goals.
+     */
+    external fun getNotSatisfiedGoals(): Array<Goal>?
+
+    /**
      * @brief Add a fact.
      * @param fact Fact to add.
      */
