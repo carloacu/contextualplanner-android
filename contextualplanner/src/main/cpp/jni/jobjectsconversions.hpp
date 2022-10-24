@@ -11,14 +11,17 @@
  */
 
 
-struct PlannerAction
+struct ActionWithId
 {
+    ActionWithId(const std::string& pId,
+                 cp::Action&& pAction)
+                 : id (pId),
+                   action(std::move(pAction))
+    {
+    }
+
     std::string id;
-    cp::SetOfFacts preferInContext;
-    cp::SetOfFacts precondition;
-    cp::SetOfFacts effect;
-    cp::SetOfFacts potentialEffect;
-    std::map<int, std::vector<cp::Goal>> goalsToAdd;
+    cp::Action action;
 };
 
 
@@ -50,7 +53,7 @@ std::map<int, std::vector<cp::Goal>> toGoals(JNIEnv *env, jobjectArray jGoals);
 
 jint toId(JNIEnv *env, jobject object);
 
-PlannerAction toPlannerAction(JNIEnv *env, jobject action);
+ActionWithId toActionWithId(JNIEnv *env, jobject action);
 
 cp::Inference toInference(JNIEnv *env, jobject jinference, std::string& inferenceId);
 

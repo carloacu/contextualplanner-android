@@ -62,7 +62,7 @@ Java_com_contextualplanner_ContextualPlannerKt_lookForAnActionToDo(
                 auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
                 const cp::Goal* goal = nullptr;
                 int priority = 0;
-                auto action = cp::lookForAnActionToDo(parameters, *problemPtr, domainPtr->domain,
+                auto action = cp::lookForAnActionToDo(parameters, *problemPtr, *domainPtr,
                                                       now, &goal, &priority, &problemPtr->historical);
 
                 if (goal != nullptr)

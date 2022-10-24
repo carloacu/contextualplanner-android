@@ -61,18 +61,17 @@ jint toId(JNIEnv *env, jobject object) {
 }
 
 
-PlannerAction toPlannerAction(JNIEnv *env, jobject action)
+ActionWithId toActionWithId(JNIEnv *env, jobject action)
 {
     jclass actionClass = env->FindClass("com/contextualplanner/types/Action");
-    PlannerAction res;
-    res.id = _getStringFromMethod(env, actionClass, action, "getId");
+    static const char andSep = '&';
+    std::string id = _getStringFromMethod(env, actionClass, action, "getId");
+    cp::Action res(cp::SetOfFacts::fromStr(_getStringFromMethod(env, actionClass, action, "getPrecondition"), andSep),
+                   cp::WorldModification(cp::SetOfFacts::fromStr(_getStringFromMethod(env, actionClass, action, "getEffect"), andSep)));
     res.preferInContext = cp::SetOfFacts::fromStr(_getStringFromMethod(env, actionClass, action, "getPreferInContext"), ',');
-    static const char sep = '&';
-    res.precondition = cp::SetOfFacts::fromStr(_getStringFromMethod(env, actionClass, action, "getPrecondition"), sep);
-    res.effect = cp::SetOfFacts::fromStr(_getStringFromMethod(env, actionClass, action, "getEffect"), sep);
-    res.potentialEffect = cp::SetOfFacts::fromStr(_getStringFromMethod(env, actionClass, action, "getPotentialEffect"), sep);
-    res.goalsToAdd = _getGoalArrayFromMethod(env, actionClass, action, "getGoalsToAdd");
-    return res;
+    res.effect.potentialFactsModifications = cp::SetOfFacts::fromStr(_getStringFromMethod(env, actionClass, action, "getPotentialEffect"), andSep);
+    res.effect.goalsToAdd = _getGoalArrayFromMethod(env, actionClass, action, "getGoalsToAdd");
+    return {id, std::move(res)};
 }
 
 cp::Inference toInference(JNIEnv *env, jobject jinference, std::string& inferenceId)
