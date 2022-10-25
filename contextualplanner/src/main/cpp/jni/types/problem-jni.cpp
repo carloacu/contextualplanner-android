@@ -331,7 +331,10 @@ Java_com_contextualplanner_types_Problem_removeFirstGoalsThatAreAlreadySatisfied
     protectByMutex([&]() {
         auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
         if (plannerProblemPtr != nullptr)
-            plannerProblemPtr->problem.removeFirstGoalsThatAreAlreadySatisfied();
+        {
+            auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
+            plannerProblemPtr->problem.removeFirstGoalsThatAreAlreadySatisfied(now);
+        }
     });
 }
 
@@ -406,6 +409,7 @@ Java_com_contextualplanner_types_Problem_areFactsTrue(
                 auto setOfFactsStr = toString(env, jsetOfFactsStr);
                 return plannerProblemPtr->problem.areFactsTrue(cp::SetOfFacts::fromStr(setOfFactsStr, '&'));
             }
+            return false;
         });
     }, false);
 }
