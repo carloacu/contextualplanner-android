@@ -260,12 +260,14 @@ class PlannerTest {
         problem.notifyActionDone(greetActionId, domain)
         assertEquals(0, goalsRemovedTracker.flushGoalsRemoved().size)
         assertEquals(0, goalsRemovedTracker2.flushGoalsRemoved().size)
-        assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
-        problem.notifyActionDone(checkInActionId, domain)
 
+        problem.removeFirstGoalsThatAreAlreadySatisfied()
         var goalsRemoved = goalsRemovedTracker.flushGoalsRemoved()
         assertEquals(1, goalsRemoved.size)
         assertEquals(greetedFact, goalsRemoved[0])
+
+        assertEquals(checkInActionId, lookForAnActionToDo(problem, domain).actionId)
+        problem.notifyActionDone(checkInActionId, domain)
 
         assertEquals(0, goalsRemovedTracker.flushGoalsRemoved().size)
         assertEquals("", lookForAnActionToDo(problem, domain).actionId)
