@@ -28,6 +28,13 @@ namespace {
         auto jGoals = reinterpret_cast<jobjectArray>(pEnv->CallObjectMethod(pOjbect, getFun));
         return toGoals(pEnv, jGoals);
     }
+
+    cp::Goal _getGoalFromMethod(JNIEnv *pEnv, jclass pClass, jobject pOjbect, const char * pFunctionName, int* pPriority)
+    {
+        jmethodID getFun = pEnv->GetMethodID(pClass, pFunctionName, "()Lcom/contextualplanner/types/Goal;");
+        auto jGoal = reinterpret_cast<jobject>(pEnv->CallObjectMethod(pOjbect, getFun));
+        return toGoal(pEnv, jGoal, pPriority);
+    }
 }
 
 
@@ -82,6 +89,17 @@ cp::Inference toInference(JNIEnv *env, jobject jinference, std::string& inferenc
     return {cp::SetOfFacts::fromStr(_getStringFromMethod(env, inferenceClass, jinference, "getCondition"), sep),
                          cp::SetOfFacts::fromStr(_getStringFromMethod(env, inferenceClass, jinference, "getFactsToModify"), sep),
                          _getGoalArrayFromMethod(env, inferenceClass, jinference, "getGoalsToAdd")};
+}
+
+
+cp::OneStepOfPlannerResult toOneStepOfPlannerResult(JNIEnv *env, jobject jOneStepOfPlanner)
+{
+    jclass oneStepOfPlannerResultClass = env->FindClass("com/contextualplanner/types/OneStepOfPlannerResult");
+
+    int fromGoalPriority = 0;
+    cp::Goal fromGoal = _getGoalFromMethod(env, oneStepOfPlannerResultClass, jOneStepOfPlanner, "getGoal", &fromGoalPriority);
+    auto actionId = _getStringFromMethod(env, oneStepOfPlannerResultClass, jOneStepOfPlanner, "getActionId");
+    return cp::OneStepOfPlannerResult(actionId, {}, fromGoal, fromGoalPriority);
 }
 
 cp::Goal toGoal(JNIEnv *env, jobject goal, int* pPriority)

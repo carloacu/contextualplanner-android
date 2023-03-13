@@ -9,26 +9,15 @@ import com.contextualplanner.types.*
  * @param[in] pDomain Domain of the planner
  * @return A class containing the action to do and the goal that motivated to do this action.
  */
-external fun lookForAnActionToDo(problem: Problem, domain: Domain): ActionAndGoal
+external fun lookForAnActionToDo(problem: Problem, domain: Domain): OneStepOfPlannerResult
 
 
 /**
  * @brief Notify that an action has been done.
- * @param action Action finished.
+ * @param oneStepOfPlannerResult Planner result step that motivated this action.
  * @param problem Problem to be notified.
  * @param domain Domain containing all the possible actions.
  */
-fun notifyActionDone(action: Action, problem: Problem, domain: Domain) {
-    problem.notifyActionDone(action.id, domain)
-}
-
-
-/**
- * @brief Notify that an action has been done.
- * @param actionId Action identifier, of the finished action.
- * @param problem Problem to be notified.
- * @param domain Domain containing all the possible actions.
- */
-fun notifyActionDone(actionId: String, problem: Problem, domain: Domain) {
-    problem.notifyActionDone(actionId, domain)
+fun notifyActionDone(oneStepOfPlannerResult: OneStepOfPlannerResult, problem: Problem, domain: Domain) {
+    problem.notifyActionDone(oneStepOfPlannerResult, domain)
 }

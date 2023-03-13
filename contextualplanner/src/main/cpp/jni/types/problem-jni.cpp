@@ -131,19 +131,18 @@ Java_com_contextualplanner_types_Problem_00024Companion_newProblem(
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_contextualplanner_types_Problem_notifyActionDone(
-        JNIEnv *env, jobject object, jstring jActionId, jobject domainObject) {
+        JNIEnv *env, jobject object, jobject jOneStepPlannerResult, jobject domainObject) {
     convertCppExceptionsToJavaExceptions(env, [&]() {
         return protectByMutex([&]() {
             auto *domainPtr = idToDomainUnsafe(toId(env, domainObject));
             auto *plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
             if (domainPtr != nullptr && plannerProblemPtr != nullptr) {
-                auto actionId = toString(env, jActionId);
-                auto itAction = domainPtr->actions().find(actionId);
+                auto oneStepOfPlannerResult = toOneStepOfPlannerResult(env, jOneStepPlannerResult);
+                auto itAction = domainPtr->actions().find(oneStepOfPlannerResult.actionInstance.actionId);
                 if (itAction != domainPtr->actions().end())
                 {
-                    std::map<std::string, std::string> parameters;
                     auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-                    plannerProblemPtr->problem.notifyActionDone(actionId, parameters, itAction->second.effect.factsModifications, now, &itAction->second.effect.goalsToAdd);
+                    plannerProblemPtr->problem.notifyActionDone(oneStepOfPlannerResult, itAction->second.effect.factsModifications, now, &itAction->second.effect.goalsToAdd);
                 }
             }
         });

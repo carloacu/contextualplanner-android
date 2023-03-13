@@ -24,10 +24,10 @@ class Problem : DisposableWithId(newProblem()) {
 
     /**
      * @brief Notify that an action has been done.
-     * @param actionId Action identifier, of the finished action.
+     * @param oneStepOfPlannerResult Planner result step that motivated this action.
      * @param domain Domain containing all the possible actions.
      */
-    external fun notifyActionDone(actionId: String, domain: Domain)
+    external fun notifyActionDone(oneStepOfPlannerResult: OneStepOfPlannerResult, domain: Domain)
 
     /**
      * @brief Add a goal in front of the existing goals that have the same level of priority.

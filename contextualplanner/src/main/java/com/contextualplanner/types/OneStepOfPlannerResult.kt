@@ -6,4 +6,4 @@ package com.contextualplanner.types
  * @param actionId Action identifier.
  * @param goal Goal.
  */
-data class ActionAndGoal(val actionId: String, val goal: Goal)
+data class OneStepOfPlannerResult(val actionId: String, val goal: Goal)
