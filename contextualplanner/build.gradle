@@ -4,6 +4,9 @@ plugins {
     id 'maven-publish'
     id 'org.jetbrains.kotlin.android'
 }
+ext {
+    libcontextualplannerVersionName = '1.1.20'
+}
 
 afterEvaluate {
     publishing {
@@ -13,7 +16,7 @@ afterEvaluate {
 
                 groupId = 'com.github.carloacu'
                 artifactId = 'contextual-planner'
-                version = '1.1.20'
+                version = libcontextualplannerVersionName
             }
         }
     }
@@ -28,6 +31,7 @@ android {
         targetSdk 30
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField 'String', 'CONTEXTUALPLANNER_VERSION_NAME', "\"$libcontextualplannerVersionName\""
 
         ndk {
             abiFilters 'arm64-v8a'
@@ -67,6 +71,13 @@ android {
     packagingOptions {
         exclude 'META-INF/INDEX.LIST'
         exclude 'META-INF/DEPENDENCIES'
+    }
+    libraryVariants.all { variant ->
+        variant.outputs.all { output ->
+            if (outputFile != null && outputFileName.endsWith('.aar')) {
+                outputFileName = "${archivesBaseName}-${variant.buildType.name}-${libcontextualplannerVersionName}.aar"
+            }
+        }
     }
 }
 
