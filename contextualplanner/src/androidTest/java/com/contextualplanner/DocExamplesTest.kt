@@ -29,12 +29,12 @@ class DocExamplesTest {
 
         // Look for an action to do
         val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)
-        assertEquals(sayHiActionId, oneStepOfPlannerResult.actionId)
+        assertNotNull(oneStepOfPlannerResult)
+        assertEquals(sayHiActionId, oneStepOfPlannerResult!!.actionId)
         notifyActionDone(oneStepOfPlannerResult, problem, domain)
 
         // Look for the next action to do
-        val actionAndGoal2 = lookForAnActionToDo(problem, domain)
-        assertEquals("", actionAndGoal2.actionId)
+        assertNull(lookForAnActionToDo(problem, domain))
     }
 
 
@@ -61,17 +61,18 @@ class DocExamplesTest {
 
         // Look for an action to do
         val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)
-        assertEquals(sayHiActionId, oneStepOfPlannerResult.actionId)
+        assertNotNull(oneStepOfPlannerResult)
+        assertEquals(sayHiActionId, oneStepOfPlannerResult!!.actionId)
         notifyActionDone(oneStepOfPlannerResult, problem, domain)
 
         // Look for the next action to do
         val oneStepOfPlannerResult2 = lookForAnActionToDo(problem, domain)
-        assertEquals(askHowICanHelpActionId, oneStepOfPlannerResult2.actionId)
+        assertNotNull(oneStepOfPlannerResult2)
+        assertEquals(askHowICanHelpActionId, oneStepOfPlannerResult2!!.actionId)
         notifyActionDone(oneStepOfPlannerResult2, problem, domain)
 
         // Look for the next action to do
-        val oneStepOfPlannerResult3 = lookForAnActionToDo(problem, domain)
-        assertEquals("", oneStepOfPlannerResult3.actionId)
+        assertNull(lookForAnActionToDo(problem, domain))
     }
 
 

@@ -5,11 +5,18 @@ import com.contextualplanner.types.*
 
 /**
  * @brief Ask the planner to get the next action to do.
- * @param[in, out] pProblem Problem of the planner.
- * @param[in] pDomain Domain of the planner
- * @return A class containing the action to do and the goal that motivated to do this action.
+ * @param[in, out] problem Problem of the planner.
+ * @param[in] domain Domain of the planner
+ * @return A class containing the action to do and the goal that motivated to do this action, or null if no action was found.
  */
-external fun lookForAnActionToDo(problem: Problem, domain: Domain): OneStepOfPlannerResult
+fun lookForAnActionToDo(problem: Problem, domain: Domain): OneStepOfPlannerResult? {
+    val res = lookForAnActionToDoCpp(problem, domain)
+    if (res.actionId == "")
+        return null
+    return res
+}
+
+private external fun lookForAnActionToDoCpp(problem: Problem, domain: Domain): OneStepOfPlannerResult
 
 
 /**

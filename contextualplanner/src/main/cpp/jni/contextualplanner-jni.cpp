@@ -45,7 +45,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
 
 extern "C"
 JNIEXPORT jobject JNICALL
-Java_com_contextualplanner_ContextualPlannerKt_lookForAnActionToDo(
+Java_com_contextualplanner_ContextualPlannerKt_lookForAnActionToDoCpp(
         JNIEnv *env, jclass /*clazz*/, jobject problemObject, jobject domainObject) {
     jclass actionAndGoalClass = env->FindClass(
             "com/contextualplanner/types/OneStepOfPlannerResult");
