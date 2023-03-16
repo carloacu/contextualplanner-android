@@ -32,8 +32,8 @@ class PlannerTest {
         val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)
         assertNotNull(oneStepOfPlannerResult)
         assertEquals(checkInActionId, oneStepOfPlannerResult!!.actionId)
-        assertEquals(checkedInFact, oneStepOfPlannerResult.goal.fact)
-        assertEquals(10, oneStepOfPlannerResult.goal.priority)
+        assertEquals(checkedInFact, oneStepOfPlannerResult.fromGoal.fact)
+        assertEquals(10, oneStepOfPlannerResult.fromGoal.priority)
     }
 
 

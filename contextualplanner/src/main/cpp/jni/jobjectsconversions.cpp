@@ -97,7 +97,7 @@ cp::OneStepOfPlannerResult toOneStepOfPlannerResult(JNIEnv *env, jobject jOneSte
     jclass oneStepOfPlannerResultClass = env->FindClass("com/contextualplanner/types/OneStepOfPlannerResult");
 
     int fromGoalPriority = 0;
-    cp::Goal fromGoal = _getGoalFromMethod(env, oneStepOfPlannerResultClass, jOneStepOfPlanner, "getGoal", &fromGoalPriority);
+    cp::Goal fromGoal = _getGoalFromMethod(env, oneStepOfPlannerResultClass, jOneStepOfPlanner, "getFromGoal", &fromGoalPriority);
     auto actionId = _getStringFromMethod(env, oneStepOfPlannerResultClass, jOneStepOfPlanner, "getActionId");
     return cp::OneStepOfPlannerResult(actionId, {}, fromGoal, fromGoalPriority);
 }
