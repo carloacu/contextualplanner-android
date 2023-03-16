@@ -168,8 +168,8 @@ class PlannerTest {
         val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)
         assertNotNull(oneStepOfPlannerResult)
         assertEquals(greetActionId, oneStepOfPlannerResult!!.actionId)
-        problem.notifyActionDone(oneStepOfPlannerResult, domain)
         sleep(2000)
+        problem.notifyActionDone(oneStepOfPlannerResult, domain)
         assertNull(lookForAnActionToDo(problem, domain))
     }
 
@@ -268,18 +268,14 @@ class PlannerTest {
         val problem = Problem()
         val goalsRemovedTracker = GoalsRemovedTracker(problem)
         val goalsRemovedTracker2 = GoalsRemovedTracker(problem)
-        assertEquals(0, goalsRemovedTracker.flushGoalsRemoved().size)
         problem.addGoals(arrayOf(Goal(9, checkedInFact)))
         problem.addGoals(arrayOf(Goal(10, greetedFact)))
-        assertEquals(0, goalsRemovedTracker.flushGoalsRemoved().size)
         val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)
         assertNotNull(oneStepOfPlannerResult)
         assertEquals(greetActionId, oneStepOfPlannerResult!!.actionId)
-        problem.notifyActionDone(oneStepOfPlannerResult, domain)
         assertEquals(0, goalsRemovedTracker.flushGoalsRemoved().size)
         assertEquals(0, goalsRemovedTracker2.flushGoalsRemoved().size)
-
-        problem.removeFirstGoalsThatAreAlreadySatisfied()
+        problem.notifyActionDone(oneStepOfPlannerResult, domain)
         var goalsRemoved = goalsRemovedTracker.flushGoalsRemoved()
         assertEquals(1, goalsRemoved.size)
         assertEquals(greetedFact, goalsRemoved[0])
@@ -287,10 +283,8 @@ class PlannerTest {
         val oneStepOfPlannerResult2 = lookForAnActionToDo(problem, domain)
         assertNotNull(oneStepOfPlannerResult2)
         assertEquals(checkInActionId, oneStepOfPlannerResult2!!.actionId)
-        problem.notifyActionDone(oneStepOfPlannerResult2, domain)
-
         assertEquals(0, goalsRemovedTracker.flushGoalsRemoved().size)
-        assertNull(lookForAnActionToDo(problem, domain))
+        problem.notifyActionDone(oneStepOfPlannerResult2, domain)
 
         goalsRemoved = goalsRemovedTracker.flushGoalsRemoved()
         assertEquals(1, goalsRemoved.size)
@@ -300,6 +294,8 @@ class PlannerTest {
         assertEquals(2, goalsRemoved.size)
         assertEquals(checkedInFact, goalsRemoved[0])
         assertEquals(greetedFact, goalsRemoved[1])
+
+        assertNull(lookForAnActionToDo(problem, domain))
 
         goalsRemovedTracker2.dispose()
         goalsRemovedTracker.dispose()
