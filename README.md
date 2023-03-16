@@ -50,29 +50,29 @@ Here are the types providec by this library:
 Here is an example with only one action to do:
 
 ```kotlin
-        // Fact
-        val sayHiActionId = "say_hi"
+// Fact
+val userIsGreetedFact = "user_is_greeted"
 
-        // Action identifier
-        val userIsGreetedFact = "user_is_greeted"
+// Action identifier
+val sayHiActionId = "say_hi"
 
-        // Initialize the domain with an action
-        val actions = mutableListOf<Action>()
-        actions.add(Action(sayHiActionId, effect = userIsGreetedFact))
-        val domain = Domain(actions.toTypedArray())
+// Initialize the domain with an action
+val actions = mutableListOf<Action>()
+actions.add(Action(sayHiActionId, effect = userIsGreetedFact))
+val domain = Domain(actions.toTypedArray())
 
-        // Initialize the problem with the goal to satisfy
-        val problem = Problem()
-        problem.addGoals(arrayOf(Goal(10, userIsGreetedFact)))
+// Initialize the problem with the goal to satisfy
+val problem = Problem()
+problem.addGoals(arrayOf(GoalWithPriority(10, Goal(userIsGreetedFact))))
 
-        // Look for an action to do
-        val actionAndGoal = lookForAnActionToDo(problem, domain)
-        assertEquals(sayHiActionId, actionAndGoal.actionId)
-        notifyActionDone(actionAndGoal.actionId, problem, domain)
+// Look for an action to do
+val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)
+assertNotNull(oneStepOfPlannerResult)
+assertEquals(sayHiActionId, oneStepOfPlannerResult!!.actionId)
+notifyActionDone(oneStepOfPlannerResult, problem, domain)
 
-        // Look for the next action to do
-        val actionAndGoal2 = lookForAnActionToDo(problem, domain)
-        assertEquals("", actionAndGoal2.actionId)
+// Look for the next action to do
+assertNull(lookForAnActionToDo(problem, domain))
 ```
 
 
@@ -80,35 +80,36 @@ Here is an example with two actions to do and with the usage of preconditions:
 
 
 ```kotlin
-        // Facts
-        val userIsGreetedFact = "user_is_greeted"
-        val proposedOurHelpToUser = "proposed_our_help_to_user"
+// Facts
+val userIsGreetedFact = "user_is_greeted"
+val proposedOurHelpToUser = "proposed_our_help_to_user"
 
-        // Action identifiers
-        val sayHiActionId = "say_hi"
-        val askHowICanHelpActionId = "proposed_our_help_to_user"
+// Action identifiers
+val sayHiActionId = "say_hi"
+val askHowICanHelpActionId = "proposed_our_help_to_user"
 
-        // Initialize the domain with an action
-        val actions = mutableListOf<Action>()
-        actions.add(Action(sayHiActionId, effect = userIsGreetedFact))
-        actions.add(Action(askHowICanHelpActionId, precondition = userIsGreetedFact, effect = proposedOurHelpToUser))
-        val domain = Domain(actions.toTypedArray())
+// Initialize the domain with an action
+val actions = mutableListOf<Action>()
+actions.add(Action(sayHiActionId, effect = userIsGreetedFact))
+actions.add(Action(askHowICanHelpActionId, precondition = userIsGreetedFact, effect = proposedOurHelpToUser))
+val domain = Domain(actions.toTypedArray())
 
-        // Initialize the problem with the goal to satisfy
-        val problem = Problem()
-        problem.addGoals(arrayOf(Goal(10, proposedOurHelpToUser)))
+// Initialize the problem with the goal to satisfy
+val problem = Problem()
+problem.addGoals(arrayOf(GoalWithPriority(10, Goal(proposedOurHelpToUser))))
 
-        // Look for an action to do
-        val actionAndGoal = lookForAnActionToDo(problem, domain)
-        assertEquals(sayHiActionId, actionAndGoal.actionId)
-        notifyActionDone(actionAndGoal.actionId, problem, domain)
+// Look for an action to do
+val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)
+assertNotNull(oneStepOfPlannerResult)
+assertEquals(sayHiActionId, oneStepOfPlannerResult!!.actionId)
+notifyActionDone(oneStepOfPlannerResult, problem, domain)
 
-        // Look for the next action to do
-        val actionAndGoal2 = lookForAnActionToDo(problem, domain)
-        assertEquals(askHowICanHelpActionId, actionAndGoal2.actionId)
-        notifyActionDone(actionAndGoal2.actionId, problem, domain)
+// Look for the next action to do
+val oneStepOfPlannerResult2 = lookForAnActionToDo(problem, domain)
+assertNotNull(oneStepOfPlannerResult2)
+assertEquals(askHowICanHelpActionId, oneStepOfPlannerResult2!!.actionId)
+notifyActionDone(oneStepOfPlannerResult2, problem, domain)
 
-        // Look for the next action to do
-        val actionAndGoal3 = lookForAnActionToDo(problem, domain)
-        assertEquals("", actionAndGoal3.actionId)
+// Look for the next action to do
+assertNull(lookForAnActionToDo(problem, domain))
 ```

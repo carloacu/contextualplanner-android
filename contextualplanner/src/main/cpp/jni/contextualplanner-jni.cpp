@@ -47,11 +47,11 @@ extern "C"
 JNIEXPORT jobject JNICALL
 Java_com_contextualplanner_ContextualPlannerKt_lookForAnActionToDoCpp(
         JNIEnv *env, jclass /*clazz*/, jobject problemObject, jobject domainObject) {
-    jclass actionAndGoalClass = env->FindClass(
+    jclass oneStepOfPlannerResultClass = env->FindClass(
             "com/contextualplanner/types/OneStepOfPlannerResult");
     jmethodID oneStepOfPlannerResultClassConstructor =
-            env->GetMethodID(actionAndGoalClass, "<init>",
-                             "(Ljava/lang/String;Lcom/contextualplanner/types/Goal;)V");
+            env->GetMethodID(oneStepOfPlannerResultClass, "<init>",
+                             "(Ljava/lang/String;Lcom/contextualplanner/types/GoalWithPriority;)V");
 
     return convertCppExceptionsToJavaExceptionsAndReturnTheResult<jobject>(env, [&]() {
         return protectByMutexWithReturn<jobject>([&]() {
@@ -63,17 +63,17 @@ Java_com_contextualplanner_ContextualPlannerKt_lookForAnActionToDoCpp(
                 auto plannerResult = cp::lookForAnActionToDo(*problemPtr, *domainPtr, now, &problemPtr->historical);
 
                 if (plannerResult)
-                    return env->NewObject(actionAndGoalClass, oneStepOfPlannerResultClassConstructor,
+                    return env->NewObject(oneStepOfPlannerResultClass, oneStepOfPlannerResultClassConstructor,
                                           env->NewStringUTF(plannerResult->actionInstance.toStr().c_str()),
-                                          newJavaGoal(env, plannerResult->fromGoalPriority, plannerResult->fromGoal));
+                                          newJavaGoalWithPriority(env, plannerResult->fromGoalPriority, newJavaGoal(env, plannerResult->fromGoal)));
             }
-            return env->NewObject(actionAndGoalClass, oneStepOfPlannerResultClassConstructor,
+            return env->NewObject(oneStepOfPlannerResultClass, oneStepOfPlannerResultClassConstructor,
                                   env->NewStringUTF(""),
-                                  newJavaGoal(env, 0, cp::Goal("goal_name", -1, "")));
+                                  newJavaGoalWithPriority(env, 0, newJavaGoal(env, cp::Goal("goal_name", -1, ""))));
         });
-    }, env->NewObject(actionAndGoalClass, oneStepOfPlannerResultClassConstructor,
+    }, env->NewObject(oneStepOfPlannerResultClass, oneStepOfPlannerResultClassConstructor,
                       env->NewStringUTF(""),
-                      newJavaGoal(env, 0, cp::Goal("goal_name", -1, ""))
+                      newJavaGoalWithPriority(env, 0, newJavaGoal(env, cp::Goal("goal_name", -1, "")))
                       ));
 }
 

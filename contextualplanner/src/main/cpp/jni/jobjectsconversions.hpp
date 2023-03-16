@@ -49,7 +49,9 @@ private:
 
 std::string toString(JNIEnv *env, jstring inputString);
 
-std::map<int, std::vector<cp::Goal>> toGoals(JNIEnv *env, jobjectArray jGoals);
+std::map<int, std::vector<cp::Goal>> toGoalsWithPriorities(JNIEnv *env, jobjectArray jGoals);
+
+std::vector<cp::Goal> toGoals(JNIEnv *env, jobjectArray jGoals);
 
 jint toId(JNIEnv *env, jobject object);
 
@@ -59,9 +61,13 @@ cp::Inference toInference(JNIEnv *env, jobject jinference, std::string& inferenc
 
 cp::OneStepOfPlannerResult toOneStepOfPlannerResult(JNIEnv *env, jobject jOneStepOfPlanner);
 
-cp::Goal toGoal(JNIEnv *env, jobject goal, int* pPriority);
+cp::Goal toGoalWithPriority(JNIEnv *env, jobject goal, int& pPriority);
 
-jobject newJavaGoal(JNIEnv *env, int pPriority, const cp::Goal& pGoal);
+cp::Goal toGoal(JNIEnv *env, jobject goal);
+
+jobject newJavaGoalWithPriority(JNIEnv *env, int pPriority, jobject jGoal);
+
+jobject newJavaGoal(JNIEnv *env, const cp::Goal& pGoal);
 
 
 #endif // CONTEXTUALPLANNER_JOBJECTSCONVERSIONS_HPP

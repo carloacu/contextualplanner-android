@@ -8,7 +8,8 @@ package com.contextualplanner.types
  * @param precondition Set of facts serialized in string that should be present in the world to be able to do this action.
  * @param effect Fact modifications declared and that will be applied to the world.
  * @param potentialEffect Fact modifications declared but that will not be applied to the world.
- * @param goalsToAdd Goals to add in the world.
+ * @param goalsToAdd Goals with priorities to add in the world.
+ * @param goalsToAddInCurrentPriority Goals to add in current priority in the world.
  */
 data class Action(
     val id: String,
@@ -16,5 +17,6 @@ data class Action(
     val precondition: String = "",
     val effect: String = "",
     val potentialEffect: String = "",
-    val goalsToAdd: Array<Goal> = arrayOf()
+    val goalsToAdd: Array<GoalWithPriority> = arrayOf(),
+    val goalsToAddInCurrentPriority: Array<Goal> = arrayOf()
 )

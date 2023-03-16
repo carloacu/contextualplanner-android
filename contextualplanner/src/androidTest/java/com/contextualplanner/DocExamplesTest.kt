@@ -1,9 +1,6 @@
 package com.contextualplanner
 
-import com.contextualplanner.types.Action
-import com.contextualplanner.types.Domain
-import com.contextualplanner.types.Goal
-import com.contextualplanner.types.Problem
+import com.contextualplanner.types.*
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -25,7 +22,7 @@ class DocExamplesTest {
 
         // Initialize the problem with the goal to satisfy
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(10, userIsGreetedFact)))
+        problem.addGoals(arrayOf(GoalWithPriority(10, Goal(userIsGreetedFact))))
 
         // Look for an action to do
         val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)
@@ -57,7 +54,7 @@ class DocExamplesTest {
 
         // Initialize the problem with the goal to satisfy
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(10, proposedOurHelpToUser)))
+        problem.addGoals(arrayOf(GoalWithPriority(10, Goal(proposedOurHelpToUser))))
 
         // Look for an action to do
         val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)

@@ -68,11 +68,6 @@ namespace {
     jobjectArray _convertGoalsToJava(
             JNIEnv *env,
             const std::map<int, std::vector<cp::Goal>>& goals) {
-        jclass goalClass = env->FindClass("com/contextualplanner/types/Goal");
-        jmethodID goalClassConstructor =
-                env->GetMethodID(goalClass, "<init>",
-                                 "(ILjava/lang/String;Ljava/lang/String;ILjava/lang/String;)V");
-
         std::vector<std::pair<int, cp::Goal>> prioritiesToGoal;
         for (auto itGoalsGroup = goals.end(); itGoalsGroup != goals.begin(); )
         {
@@ -80,16 +75,28 @@ namespace {
             for (auto& currGoal : itGoalsGroup->second)
                 prioritiesToGoal.emplace_back(itGoalsGroup->first, currGoal);
         }
-        jobjectArray result = (jobjectArray)env->NewObjectArray(prioritiesToGoal.size(), goalClass,
-                                                                env->NewObject(goalClass, goalClassConstructor,
-                                                                               0, env->NewStringUTF(""),
-                                                                               env->NewStringUTF(""),
-                                                                               -1, env->NewStringUTF("")));
+
+        jclass goalClass = env->FindClass("com/contextualplanner/types/Goal");
+        jmethodID goalClassConstructor =
+                env->GetMethodID(goalClass, "<init>",
+                                 "(Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;)V");
+        jclass goalWithPriorityClass = env->FindClass("com/contextualplanner/types/GoalWithPriority");
+        jmethodID goalWithPriorityClassConstructor =
+                env->GetMethodID(goalWithPriorityClass, "<init>",
+                                 "(ILcom/contextualplanner/types/Goal;)V");
+        jobjectArray result = (jobjectArray)env->NewObjectArray(prioritiesToGoal.size(), goalWithPriorityClass,
+                                                                env->NewObject(goalWithPriorityClass, goalWithPriorityClassConstructor,
+                                                                               0,
+                                                                               env->NewObject(goalClass, goalClassConstructor,
+                                                                                              env->NewStringUTF(""),
+                                                                                              env->NewStringUTF(""),
+                                                                                              -1, env->NewStringUTF(""))
+                                                                               ));
 
         jsize arrayElt = 0;
         for (const auto& currPriorityToGoal : prioritiesToGoal) {
             env->SetObjectArrayElement(result, arrayElt++,
-                                       newJavaGoal(env, currPriorityToGoal.first, currPriorityToGoal.second));
+                                       newJavaGoalWithPriority(env, currPriorityToGoal.first, newJavaGoal(env, currPriorityToGoal.second)));
         }
         return result;
     }
@@ -142,7 +149,8 @@ Java_com_contextualplanner_types_Problem_notifyActionDone(
                 if (itAction != domainPtr->actions().end())
                 {
                     auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-                    plannerProblemPtr->problem.notifyActionDone(oneStepOfPlannerResult, itAction->second.effect.factsModifications, now, &itAction->second.effect.goalsToAdd);
+                    plannerProblemPtr->problem.notifyActionDone(oneStepOfPlannerResult, itAction->second.effect.factsModifications, now,
+                                                                &itAction->second.effect.goalsToAdd, &itAction->second.effect.goalsToAddInCurrentPriority);
                 }
             }
         });
@@ -155,8 +163,8 @@ JNIEXPORT void JNICALL
 Java_com_contextualplanner_types_Problem_pushFrontGoal(
         JNIEnv *env, jobject object, jobject jGoal) {
     protectByMutex([&]() {
-        int priority = 10;
-        auto goal = toGoal(env, jGoal, &priority);
+        int priority = 0;
+        auto goal = toGoalWithPriority(env, jGoal, priority);
         auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
         if (plannerProblemPtr != nullptr)
         {
@@ -171,8 +179,8 @@ JNIEXPORT void JNICALL
 Java_com_contextualplanner_types_Problem_pushBackGoal(
         JNIEnv *env, jobject object, jobject jGoal) {
     protectByMutex([&]() {
-        int priority = 10;
-        auto goal = toGoal(env, jGoal, &priority);
+        int priority = 0;
+        auto goal = toGoalWithPriority(env, jGoal, priority);
         auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
         if (plannerProblemPtr != nullptr)
         {
@@ -226,8 +234,7 @@ Java_com_contextualplanner_types_Problem_getGoals(
             auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
             if (plannerProblemPtr != nullptr)
                 return _convertGoalsToJava(env, plannerProblemPtr->problem.goals());
-            jclass goalClass = env->FindClass("com/contextualplanner/types/Goal");
-            return env->NewObjectArray(0, goalClass, env->NewStringUTF(""));
+            return _convertGoalsToJava(env, {});
         });
     }, nullptr);
 }
@@ -241,8 +248,7 @@ Java_com_contextualplanner_types_Problem_getNotSatisfiedGoals(
             auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
             if (plannerProblemPtr != nullptr)
                 return _convertGoalsToJava(env, plannerProblemPtr->problem.getNotSatisfiedGoals());
-            jclass goalClass = env->FindClass("com/contextualplanner/types/Goal");
-            return env->NewObjectArray(0, goalClass, env->NewStringUTF(""));
+            return _convertGoalsToJava(env, {});
         });
     }, nullptr);
 }
@@ -318,7 +324,8 @@ Java_com_contextualplanner_types_Problem_addGoals(
         if (plannerProblemPtr != nullptr)
         {
             auto now = std::make_unique<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
-            plannerProblemPtr->problem.addGoals(toGoals(env, jGoals), now);
+            auto goals = toGoalsWithPriorities(env, jGoals);
+            plannerProblemPtr->problem.addGoals(goals, now);
         }
     });
 }

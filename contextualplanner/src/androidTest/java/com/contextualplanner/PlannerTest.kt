@@ -24,15 +24,15 @@ class PlannerTest {
     @Test
     fun directLinkFromGoalToEffect() {
         val actions = mutableListOf<Action>()
-        actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
-        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        actions.add(Action(greetActionId, "", "", greetedFact, ""))
+        actions.add(Action(checkInActionId, "", "", checkedInFact, ""))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(10, checkedInFact)))
+        problem.addGoals(arrayOf(GoalWithPriority(10, Goal(checkedInFact))))
         val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)
         assertNotNull(oneStepOfPlannerResult)
         assertEquals(checkInActionId, oneStepOfPlannerResult!!.actionId)
-        assertEquals(checkedInFact, oneStepOfPlannerResult.fromGoal.fact)
+        assertEquals(checkedInFact, oneStepOfPlannerResult.fromGoal.goal.fact)
         assertEquals(10, oneStepOfPlannerResult.fromGoal.priority)
     }
 
@@ -40,11 +40,11 @@ class PlannerTest {
     @Test
     fun preconditionResolution() {
         val actions = mutableListOf<Action>()
-        actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
-        actions.add(Action(checkInActionId, "", greetedFact, checkedInFact, "", arrayOf()))
+        actions.add(Action(greetActionId, "", "", greetedFact, ""))
+        actions.add(Action(checkInActionId, "", greetedFact, checkedInFact, ""))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(10, checkedInFact)))
+        problem.addGoals(arrayOf(GoalWithPriority(10, Goal(checkedInFact))))
         val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)
         assertNotNull(oneStepOfPlannerResult)
         assertEquals(greetActionId, oneStepOfPlannerResult!!.actionId)
@@ -55,14 +55,14 @@ class PlannerTest {
     @Test
     fun goalPriority() {
         val actions = mutableListOf<Action>()
-        actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
-        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
-        actions.add(Action(informedAboutTheCompanyActionId, "", "", informedAboutTheCompanyFact, "", arrayOf()))
+        actions.add(Action(greetActionId, "", "", greetedFact, ""))
+        actions.add(Action(checkInActionId, "", "", checkedInFact, ""))
+        actions.add(Action(informedAboutTheCompanyActionId, "", "", informedAboutTheCompanyFact, ""))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(9, checkedInFact)))
-        problem.addGoals(arrayOf(Goal(10, greetedFact)))
-        problem.addGoals(arrayOf(Goal(9, informedAboutTheCompanyFact)))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal(checkedInFact))))
+        problem.addGoals(arrayOf(GoalWithPriority(10, Goal(greetedFact))))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal(informedAboutTheCompanyFact))))
 
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain)?.actionId)
     }
@@ -70,12 +70,12 @@ class PlannerTest {
     @Test
     fun goalStackable() {
         val actions = mutableListOf<Action>()
-        actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
-        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        actions.add(Action(greetActionId, "", "", greetedFact, ""))
+        actions.add(Action(checkInActionId, "", "", checkedInFact, ""))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = -1))) // maxTimeToKeepInactive = -1 means stackable
-        problem.addGoals(arrayOf(Goal(10, greetedFact)))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal(checkedInFact, maxTimeToKeepInactive = -1)))) // maxTimeToKeepInactive = -1 means stackable
+        problem.addGoals(arrayOf(GoalWithPriority(10, Goal(greetedFact))))
         val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)
         assertNotNull(oneStepOfPlannerResult)
         assertEquals(greetActionId, oneStepOfPlannerResult!!.actionId)
@@ -86,12 +86,12 @@ class PlannerTest {
     @Test
     fun goalStackableWithCondition() {
         val actions = mutableListOf<Action>()
-        actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
-        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        actions.add(Action(greetActionId, "", "", greetedFact, ""))
+        actions.add(Action(checkInActionId, "", "", checkedInFact, ""))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = -1))) // maxTimeToKeepInactive = -1 means stackable
-        problem.addGoals(arrayOf(Goal(10, "persist(imply(" + checkedInFact + ", " + greetedFact + "))")))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal(checkedInFact, maxTimeToKeepInactive = -1)))) // maxTimeToKeepInactive = -1 means stackable
+        problem.addGoals(arrayOf(GoalWithPriority(10, Goal("persist(imply($checkedInFact, $greetedFact))"))))
         val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)
         assertNotNull(oneStepOfPlannerResult)
         assertEquals(checkInActionId, oneStepOfPlannerResult!!.actionId)
@@ -102,13 +102,13 @@ class PlannerTest {
     @Test
     fun removeAGoal() {
         val actions = mutableListOf<Action>()
-        actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
-        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        actions.add(Action(greetActionId, "", "", greetedFact, ""))
+        actions.add(Action(checkInActionId, "", "", checkedInFact, ""))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
         val greetGoalGroupId = "greetGoalGroupId"
-        problem.addGoals(arrayOf(Goal(9, checkedInFact)))
-        problem.addGoals(arrayOf(Goal(10, greetedFact, groupId = greetGoalGroupId)))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal(checkedInFact))))
+        problem.addGoals(arrayOf(GoalWithPriority(10, Goal(greetedFact, groupId = greetGoalGroupId))))
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain)?.actionId)
         assertEquals(greetActionId, lookForAnActionToDo(problem, domain)?.actionId)
         problem.removeGoals(greetGoalGroupId)
@@ -119,14 +119,14 @@ class PlannerTest {
     @Test
     fun goalNotStackable() {
         val actions = mutableListOf<Action>()
-        actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
-        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
-        actions.add(Action(informedAboutTheCompanyActionId, "", "", informedAboutTheCompanyFact, "", arrayOf()))
+        actions.add(Action(greetActionId, "", "", greetedFact, ""))
+        actions.add(Action(checkInActionId, "", "", checkedInFact, ""))
+        actions.add(Action(informedAboutTheCompanyActionId, "", "", informedAboutTheCompanyFact, ""))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(10, greetedFact)))
-        problem.addGoals(arrayOf(Goal(9, informedAboutTheCompanyFact)))
-        problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = 0))) // maxTimeToKeepInactive = 0 means not stackable
+        problem.addGoals(arrayOf(GoalWithPriority(10, Goal(greetedFact))))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal(informedAboutTheCompanyFact))))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal(checkedInFact, maxTimeToKeepInactive = 0)))) // maxTimeToKeepInactive = 0 means not stackable
         val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)
         assertNotNull(oneStepOfPlannerResult)
         assertEquals(greetActionId, oneStepOfPlannerResult!!.actionId)
@@ -142,12 +142,12 @@ class PlannerTest {
     @Test
     fun goalInactiveLessThanTheMaxTimeToKeepInactive() {
         val actions = mutableListOf<Action>()
-        actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
-        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        actions.add(Action(greetActionId, "", "", greetedFact, ""))
+        actions.add(Action(checkInActionId, "", "", checkedInFact, ""))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = 10)))
-        problem.addGoals(arrayOf(Goal(10, greetedFact)))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal(checkedInFact, maxTimeToKeepInactive = 10))))
+        problem.addGoals(arrayOf(GoalWithPriority(10, Goal(greetedFact))))
         val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)
         assertNotNull(oneStepOfPlannerResult)
         assertEquals(greetActionId, oneStepOfPlannerResult!!.actionId)
@@ -159,12 +159,12 @@ class PlannerTest {
     @Test
     fun goalInactiveMoreThanTheMaxTimeToKeepInactive() {
         val actions = mutableListOf<Action>()
-        actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
-        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        actions.add(Action(greetActionId, "", "", greetedFact, ""))
+        actions.add(Action(checkInActionId, "", "", checkedInFact, ""))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = 1)))
-        problem.addGoals(arrayOf(Goal(10, greetedFact)))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal(checkedInFact, maxTimeToKeepInactive = 1))))
+        problem.addGoals(arrayOf(GoalWithPriority(10, Goal(greetedFact))))
         val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)
         assertNotNull(oneStepOfPlannerResult)
         assertEquals(greetActionId, oneStepOfPlannerResult!!.actionId)
@@ -177,38 +177,38 @@ class PlannerTest {
     @Test
     fun getGoals() {
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(9, checkedInFact, maxTimeToKeepInactive = 1)))
-        problem.addGoals(arrayOf(Goal(10, greetedFact)))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal(checkedInFact, maxTimeToKeepInactive = 1))))
+        problem.addGoals(arrayOf(GoalWithPriority(10, Goal(greetedFact))))
         val goals = problem.getGoals()
         assertTrue(goals != null)
         assertEquals(2, goals!!.size)
         val firstGoal = goals[0]
-        assertEquals(greetedFact, firstGoal.fact)
+        assertEquals(greetedFact, firstGoal.goal.fact)
         assertEquals(10, firstGoal.priority)
-        assertEquals(-1, firstGoal.maxTimeToKeepInactive)
+        assertEquals(-1, firstGoal.goal.maxTimeToKeepInactive)
 
         val secondGoal = goals[1]
-        assertEquals(checkedInFact, secondGoal.fact)
+        assertEquals(checkedInFact, secondGoal.goal.fact)
         assertEquals(9, secondGoal.priority)
-        assertEquals(1, secondGoal.maxTimeToKeepInactive)
+        assertEquals(1, secondGoal.goal.maxTimeToKeepInactive)
     }
 
     @Test
     fun setGoalPriority() {
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(9, checkedInFact)))
-        problem.addGoals(arrayOf(Goal(10, greetedFact)))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal(checkedInFact))))
+        problem.addGoals(arrayOf(GoalWithPriority(10, Goal(greetedFact))))
         problem.setGoalPriority(greetedFact, 8, true)
 
         val goals = problem.getGoals()
         assertTrue(goals != null)
         assertEquals(2, goals!!.size)
         val firstGoal = goals[0]
-        assertEquals(checkedInFact, firstGoal.fact)
+        assertEquals(checkedInFact, firstGoal.goal.fact)
         assertEquals(9, firstGoal.priority)
 
         val secondGoal = goals[1]
-        assertEquals(greetedFact, secondGoal.fact)
+        assertEquals(greetedFact, secondGoal.goal.fact)
         assertEquals(8, secondGoal.priority)
     }
 
@@ -217,19 +217,19 @@ class PlannerTest {
     fun goalCondition() {
         val problem = Problem()
         val goalStr = "imply($greetedFact, $checkedInFact)"
-        problem.addGoals(arrayOf(Goal(9, goalStr)))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal(goalStr))))
 
         val goals = problem.getGoals()
         assertTrue(goals != null)
         assertEquals(1, goals!!.size)
         val firstGoal = goals[0]
-        assertEquals(goalStr, firstGoal.fact)
-        val condition = firstGoal.condition ?: ""
-        assertEquals(greetedFact, firstGoal.condition)
+        assertEquals(goalStr, firstGoal.goal.fact)
+        val condition = firstGoal.goal.condition ?: ""
+        assertEquals(greetedFact, firstGoal.goal.condition)
         assertFalse(problem.hasFact(condition))
 
         val actions = mutableListOf<Action>()
-        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        actions.add(Action(checkInActionId, "", "", checkedInFact, ""))
         val domain = Domain(actions.toTypedArray())
         assertNull(lookForAnActionToDo(problem, domain))
         assertEquals(0, problem.getGoals()!!.size) // goal remove because it is not persistent
@@ -245,10 +245,10 @@ class PlannerTest {
     fun persistImplication() {
         val problem = Problem()
         val goalStr = "persist(imply($greetedFact, $checkedInFact))"
-        problem.addGoals(arrayOf(Goal(9, goalStr)))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal(goalStr))))
 
         val actions = mutableListOf<Action>()
-        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        actions.add(Action(checkInActionId, "", "", checkedInFact, ""))
         val domain = Domain(actions.toTypedArray())
         assertNull(lookForAnActionToDo(problem, domain))
         assertEquals(1, problem.getGoals()!!.size)
@@ -262,14 +262,14 @@ class PlannerTest {
     @Test
     fun goalsRemovedTracker() {
         val actions = mutableListOf<Action>()
-        actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
-        actions.add(Action(checkInActionId, "", "", checkedInFact, "", arrayOf()))
+        actions.add(Action(greetActionId, "", "", greetedFact, ""))
+        actions.add(Action(checkInActionId, "", "", checkedInFact, ""))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
         val goalsRemovedTracker = GoalsRemovedTracker(problem)
         val goalsRemovedTracker2 = GoalsRemovedTracker(problem)
-        problem.addGoals(arrayOf(Goal(9, checkedInFact)))
-        problem.addGoals(arrayOf(Goal(10, greetedFact)))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal(checkedInFact))))
+        problem.addGoals(arrayOf(GoalWithPriority(10, Goal(greetedFact))))
         val oneStepOfPlannerResult = lookForAnActionToDo(problem, domain)
         assertNotNull(oneStepOfPlannerResult)
         assertEquals(greetActionId, oneStepOfPlannerResult!!.actionId)
@@ -305,14 +305,14 @@ class PlannerTest {
     @Test
     fun factsAddedCache() {
         val actions = mutableListOf<Action>()
-        actions.add(Action(greetActionId, "", "", greetedFact, "", arrayOf()))
+        actions.add(Action(greetActionId, "", "", greetedFact, ""))
         val punctualFact1 = getPunctualFactPrefix() + "fact1"
-        actions.add(Action(checkInActionId, "", "", "$checkedInFact & $punctualFact1", "", arrayOf()))
+        actions.add(Action(checkInActionId, "", "", "$checkedInFact & $punctualFact1", ""))
         val domain = Domain(actions.toTypedArray())
         val problem = Problem()
         problem.addFact(informedAboutTheCompanyFact)
-        problem.addGoals(arrayOf(Goal(9, checkedInFact)))
-        problem.addGoals(arrayOf(Goal(10, greetedFact)))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal(checkedInFact))))
+        problem.addGoals(arrayOf(GoalWithPriority(10, Goal(greetedFact))))
 
         var punctualFacts = problem.flushPunctualFacts()
         var factsAdded = problem.flushFactsAdded()
@@ -356,11 +356,11 @@ class PlannerTest {
     fun persistGoalReprint() {
         val problem = Problem()
         val goalStr = "persist(imply($greetedFact, $checkedInFact))"
-        problem.addGoals(arrayOf(Goal(9, goalStr)))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal(goalStr))))
         val goals = problem.getGoals()
         assertTrue(goals != null)
         assertEquals(1, goals!!.size)
-        assertEquals(goalStr, goals[0].fact)
+        assertEquals(goalStr, goals[0].goal.fact)
     }
 
 
@@ -370,10 +370,10 @@ class PlannerTest {
         val problem = Problem()
         val setOfInferences = SetOfInferences()
         problem.addSetOfInferences(setOfInferences)
-        problem.addGoals(arrayOf(Goal(9, "persist($factA)")))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal( "persist($factA)"))))
 
         val actions = mutableListOf<Action>()
-        actions.add(Action(actionId1, "", factB, punctualFactToto, "", arrayOf()))
+        actions.add(Action(actionId1, "", factB, punctualFactToto, ""))
         problem.addFact(factB)
 
         val domain = Domain(actions.toTypedArray())
@@ -403,8 +403,8 @@ class PlannerTest {
     @Test
     fun checkOneStepTowards() {
         val problem = Problem()
-        problem.addGoals(arrayOf(Goal(9, "oneStepTowards($factA)")))
-        problem.addGoals(arrayOf(Goal(8, factB)))
+        problem.addGoals(arrayOf(GoalWithPriority(9, Goal("oneStepTowards($factA)"))))
+        problem.addGoals(arrayOf(GoalWithPriority(8, Goal(factB))))
 
         val actions = mutableListOf<Action>()
         actions.add(Action(actionId1, potentialEffect = factA))

@@ -56,17 +56,17 @@ class Problem : DisposableWithId(newProblem()) {
     external fun setGoalPriority(goalName: String, priority: Int, pushFrontOrBottomInCaseOfConflictWithAnotherGoal: Boolean)
 
     /**
-     * @brief Get the goals to satisfy.
-     * @return Goals to satisfy.
+     * @brief Get the goals with their priorities to satisfy.
+     * @return Goals with their priorities to satisfy.
      */
-    external fun getGoals(): Array<Goal>?
+    external fun getGoals(): Array<GoalWithPriority>?
 
     /**
      * @brief Get the not satisfied goals.<br/>
      * A goal is not satisfied if the condition is true (if it exist) and if the value of the goal is not true.
-     * @return Map of priority to not satisfied goals.
+     * @return Goals with their priorities to satisfy that are not already satisfied.
      */
-    external fun getNotSatisfiedGoals(): Array<Goal>?
+    external fun getNotSatisfiedGoals(): Array<GoalWithPriority>?
 
     /**
      * @brief Add a fact.
@@ -94,9 +94,9 @@ class Problem : DisposableWithId(newProblem()) {
 
     /**
      * @brief Add some goals.
-     * @param goals Goals to add.
+     * @param goalWithPriority Goals with priorities to add.
      */
-    external fun addGoals(goals: Array<Goal>)
+    external fun addGoals(goalWithPriority: Array<GoalWithPriority>)
 
     /**
      * @brief Remove the first goals that are already satisfied.
