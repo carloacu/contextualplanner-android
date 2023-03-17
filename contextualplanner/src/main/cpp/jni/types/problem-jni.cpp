@@ -161,10 +161,10 @@ Java_com_contextualplanner_types_Problem_notifyActionDone(
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_contextualplanner_types_Problem_pushFrontGoal(
-        JNIEnv *env, jobject object, jobject jGoal) {
+        JNIEnv *env, jobject object, jobject jGoalWithPriority) {
     protectByMutex([&]() {
         int priority = 0;
-        auto goal = toGoalWithPriority(env, jGoal, priority);
+        auto goal = toGoalWithPriority(env, jGoalWithPriority, priority);
         auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
         if (plannerProblemPtr != nullptr)
         {
@@ -177,10 +177,10 @@ Java_com_contextualplanner_types_Problem_pushFrontGoal(
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_contextualplanner_types_Problem_pushBackGoal(
-        JNIEnv *env, jobject object, jobject jGoal) {
+        JNIEnv *env, jobject object, jobject jGoalWithPriority) {
     protectByMutex([&]() {
         int priority = 0;
-        auto goal = toGoalWithPriority(env, jGoal, priority);
+        auto goal = toGoalWithPriority(env, jGoalWithPriority, priority);
         auto* plannerProblemPtr = _idToPlannerProblemUnsafe(toId(env, object));
         if (plannerProblemPtr != nullptr)
         {

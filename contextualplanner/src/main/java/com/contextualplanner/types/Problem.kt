@@ -31,15 +31,15 @@ class Problem : DisposableWithId(newProblem()) {
 
     /**
      * @brief Add a goal in front of the existing goals that have the same level of priority.
-     * @param goal Goal to add.
+     * @param goalWithPriority Goal with priority to add.
      */
-    external fun pushFrontGoal(goal: Goal)
+    external fun pushFrontGoal(goalWithPriority: GoalWithPriority)
 
     /**
      * @brief Add a goal on bottom of the existing goals that have the same level of priority.
-     * @param goal Goal to add.
+     * @param goalWithPriority Goal with priority to add.
      */
-    external fun pushBackGoal(goal: Goal)
+    external fun pushBackGoal(goalWithPriority: GoalWithPriority)
 
     /**
      * @brief Remove some goals.
